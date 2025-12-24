@@ -1,0 +1,30 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+// Find autoloader
+$autoloadPaths = [
+    __DIR__ . '/../vendor/autoload.php',           // When installed as a standalone package
+    __DIR__ . '/../../../autoload.php',            // When installed as a dependency
+    __DIR__ . '/../../../../vendor/autoload.php',  // When in packages/ directory
+];
+
+$autoloaderFound = false;
+foreach ($autoloadPaths as $autoloadPath) {
+    if (file_exists($autoloadPath)) {
+        require_once $autoloadPath;
+        $autoloaderFound = true;
+        break;
+    }
+}
+
+if (!$autoloaderFound) {
+    fwrite(STDERR, "Autoloader not found. Run 'composer install' first.\n");
+    exit(1);
+}
+
+use Enabel\CodingStandard\Application;
+
+$application = new Application();
+$application->run();

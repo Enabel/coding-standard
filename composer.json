@@ -1,0 +1,45 @@
+{
+    "name": "enabel/coding-standard",
+    "description": "Initialize coding standards configuration for PHP/Symfony projects",
+    "type": "library",
+    "license": "MIT",
+    "keywords": [
+        "coding-standards",
+        "php-cs-fixer",
+        "phpstan",
+        "rector",
+        "ddev",
+        "gitlab-ci",
+        "github-actions"
+    ],
+    "authors": [
+        {
+            "name": "Enabel Development Team"
+        }
+    ],
+    "require": {
+        "php": ">=8.3",
+        "symfony/console": "^7.0 || ^8.0",
+        "symfony/filesystem": "^7.0 || ^8.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^11.0 || ^12.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Enabel\\CodingStandard\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Enabel\\CodingStandard\\Tests\\": "tests/"
+        }
+    },
+    "bin": [
+        "bin/coding-standard"
+    ],
+    "config": {
+        "sort-packages": true
+    },
+    "minimum-stability": "stable"
+}
