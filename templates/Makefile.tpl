@@ -128,7 +128,7 @@ test: ## Run PHPUnit tests
 	$(EXEC) bin/phpunit
 
 test-coverage: ## Run tests with coverage report
-	$(EXEC) bin/phpunit --coverage-html var/coverage
+	$(EXEC) bin/phpunit --coverage-html var/coverage --coverage-text
 
 ## —— CI ——————————————————————————————————————————————————————————————————
 .PHONY: ci qa

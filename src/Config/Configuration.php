@@ -2,6 +2,13 @@
 
 declare(strict_types=1);
 
+/*
+ * This file is part of the Enabel Coding Standard.
+ * Copyright (c) Enabel <https://github.com/Enabel>
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
 namespace Enabel\CodingStandard\Config;
 
 final readonly class Configuration
@@ -31,7 +38,8 @@ final readonly class Configuration
         public ConflictResolution $conflictResolution,
         public ?string $databaseType = null,
         public ?string $databaseVersion = null,
-    ) {}
+    ) {
+    }
 
     public function getPhpVersionNumber(): string
     {
@@ -94,6 +102,9 @@ final readonly class Configuration
         };
     }
 
+    /**
+     * @return array<string, string>
+     */
     public function getDatabaseEnvVars(): array
     {
         return match ($this->databaseType) {

@@ -2,15 +2,22 @@
 
 declare(strict_types=1);
 
+/*
+ * This file is part of the Enabel Coding Standard.
+ * Copyright (c) Enabel <https://github.com/Enabel>
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
 namespace Enabel\CodingStandard\Command;
 
 use Enabel\CodingStandard\Config\Configuration;
 use Enabel\CodingStandard\Config\ConflictResolution;
 use Enabel\CodingStandard\Detector\ExistingConfigDetector;
+use Enabel\CodingStandard\Generator\AzureDevOpsGenerator;
 use Enabel\CodingStandard\Generator\ComposerScriptsGenerator;
 use Enabel\CodingStandard\Generator\DdevGenerator;
 use Enabel\CodingStandard\Generator\GeneratorInterface;
-use Enabel\CodingStandard\Generator\AzureDevOpsGenerator;
 use Enabel\CodingStandard\Generator\GitHubActionsGenerator;
 use Enabel\CodingStandard\Generator\GitLabCiGenerator;
 use Enabel\CodingStandard\Generator\MakefileGenerator;
@@ -18,6 +25,7 @@ use Enabel\CodingStandard\Generator\PhpCsFixerGenerator;
 use Enabel\CodingStandard\Generator\PhpStanGenerator;
 use Enabel\CodingStandard\Generator\PhpUnitGenerator;
 use Enabel\CodingStandard\Generator\RectorGenerator;
+use Enabel\CodingStandard\Generator\ToolsGitIgnoreGenerator;
 use Enabel\CodingStandard\IO\InteractiveIO;
 use Enabel\CodingStandard\Template\TemplateRenderer;
 use Symfony\Component\Console\Attribute\AsCommand;
@@ -269,6 +277,7 @@ final class InitCommand extends Command
             new PhpStanGenerator($renderer),
             new RectorGenerator($renderer),
             new PhpUnitGenerator($renderer),
+            new ToolsGitIgnoreGenerator($renderer),
             new DdevGenerator($renderer),
             new MakefileGenerator($renderer),
             new GitLabCiGenerator($renderer),

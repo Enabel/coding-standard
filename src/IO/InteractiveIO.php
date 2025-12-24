@@ -2,6 +2,13 @@
 
 declare(strict_types=1);
 
+/*
+ * This file is part of the Enabel Coding Standard.
+ * Copyright (c) Enabel <https://github.com/Enabel>
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
 namespace Enabel\CodingStandard\IO;
 
 use Enabel\CodingStandard\Config\Configuration;
@@ -12,7 +19,8 @@ final class InteractiveIO
 {
     public function __construct(
         private readonly SymfonyStyle $io,
-    ) {}
+    ) {
+    }
 
     public function gatherConfiguration(string $outputDir): Configuration
     {
@@ -21,11 +29,13 @@ final class InteractiveIO
         // Project settings
         $this->io->section('Project Settings');
 
+        /** @var string $projectName */
         $projectName = $this->io->ask(
             'Project name',
             basename((string) getcwd()),
         );
 
+        /** @var string $phpVersion */
         $phpVersion = $this->io->choice(
             'PHP version',
             ['8.3', '8.4', '8.5'],
@@ -37,6 +47,7 @@ final class InteractiveIO
         $databaseType = null;
         $databaseVersion = null;
         if ($isSymfony) {
+            /** @var string $symfonyVersion */
             $symfonyVersion = $this->io->choice(
                 'Symfony version',
                 ['7.4', '8.0'],
@@ -45,6 +56,7 @@ final class InteractiveIO
 
             $useDatabase = $this->io->confirm('Configure a database?', true);
             if ($useDatabase) {
+                /** @var string $databaseType */
                 $databaseType = $this->io->choice(
                     'Database type',
                     [
@@ -56,6 +68,7 @@ final class InteractiveIO
                 );
 
                 $versions = Configuration::DATABASE_VERSIONS[$databaseType];
+                /** @var string $databaseVersion */
                 $databaseVersion = $this->io->choice(
                     'Database version',
                     array_combine($versions, $versions),
@@ -71,6 +84,7 @@ final class InteractiveIO
         $includePhpStan = $this->io->confirm('Include PHPStan?', true);
         $phpstanLevel = 9;
         if ($includePhpStan) {
+            /** @var string $level */
             $level = $this->io->choice(
                 'PHPStan analysis level',
                 ['6', '7', '8', '9', 'max'],
@@ -84,6 +98,7 @@ final class InteractiveIO
         // Infrastructure
         $this->io->section('Infrastructure');
 
+        /** @var string $ciProvider */
         $ciProvider = $this->io->choice(
             'CI provider',
             ['gitlab' => 'GitLab CI', 'github' => 'GitHub Actions', 'azure' => 'Azure DevOps', 'none' => 'None'],
@@ -96,7 +111,9 @@ final class InteractiveIO
         // Paths
         $this->io->section('Paths');
 
+        /** @var string $srcPath */
         $srcPath = $this->io->ask('Source directory', 'src');
+        /** @var string $testsPath */
         $testsPath = $this->io->ask('Tests directory', 'tests');
 
         return new Configuration(
@@ -131,6 +148,7 @@ final class InteractiveIO
             implode(', ', $existingFiles),
         ));
 
+        /** @var string $choice */
         $choice = $this->io->choice(
             'How do you want to handle existing files?',
             [

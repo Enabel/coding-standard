@@ -1,0 +1,23 @@
+parameters:
+    level: 9
+    paths:
+        - src
+        - tests
+    excludePaths:
+        - tests/bootstrap.php
+
+    tmpDir: var/cache/phpstan
+
+    parallel:
+        maximumNumberOfProcesses: 4
+
+    inferPrivatePropertyTypeFromConstructor: true
+    treatPhpDocTypesAsCertain: false
+    checkUninitializedProperties: true
+    checkDynamicProperties: true
+    checkImplicitMixed: true
+
+    ignoreErrors:
+        - '#^.*generic type.*$#'
+
+    reportUnmatchedIgnoredErrors: false

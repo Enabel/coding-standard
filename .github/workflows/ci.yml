@@ -1,0 +1,98 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: intl, zip
+          coverage: none
+
+      - name: Get Composer cache directory
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: ${{ runner.os }}-composer-
+
+      - name: Validate composer.json
+        run: composer validate --no-check-publish
+
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-progress
+
+      - name: Install PHP-CS-Fixer
+        run: composer install --prefer-dist --no-progress -d tools/php-cs-fixer
+
+      - name: Install PHPStan
+        run: composer install --prefer-dist --no-progress -d tools/phpstan
+
+      - name: Install Rector
+        run: composer install --prefer-dist --no-progress -d tools/rector
+
+      - name: Cache tools
+        uses: actions/cache@v4
+        with:
+          path: |
+            tools/*/vendor
+          key: ${{ runner.os }}-tools-${{ hashFiles('tools/*/composer.lock') }}
+
+  analyze:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: intl, zip
+
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-progress
+
+      - name: Install PHP-CS-Fixer
+        run: composer install --prefer-dist --no-progress -d tools/php-cs-fixer
+
+      - name: Check code style
+        run: tools/php-cs-fixer/vendor/bin/php-cs-fixer fix --dry-run --diff
+
+      - name: Install PHPStan
+        run: composer install --prefer-dist --no-progress -d tools/phpstan
+
+      - name: Run PHPStan
+        run: tools/phpstan/vendor/bin/phpstan analyse
+
+  test:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: intl, zip
+
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-progress
+
+      - name: Run tests
+        run: bin/phpunit --testdox

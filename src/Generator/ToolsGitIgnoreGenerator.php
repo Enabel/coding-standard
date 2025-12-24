@@ -13,26 +13,24 @@ namespace Enabel\CodingStandard\Generator;
 
 use Enabel\CodingStandard\Config\Configuration;
 
-final class DdevGenerator extends AbstractGenerator
+final class ToolsGitIgnoreGenerator extends AbstractGenerator
 {
     public function generate(Configuration $config): array
     {
         return [
-            '.ddev/config.yaml' => $this->render('ddev/config.yaml.tpl', [
-                'projectName' => $config->projectName,
-                'phpVersion' => $config->phpVersion,
-                'isSymfony' => $config->isSymfonyProject,
-            ]),
+            'tools/.gitignore' => $this->render('tools/.gitignore.tpl'),
         ];
     }
 
     public function supports(Configuration $config): bool
     {
-        return $config->includeDdev;
+        return $config->hasAnyTool();
     }
 
     public function getTargetFiles(): array
     {
-        return ['.ddev/config.yaml'];
+        return [
+            'tools/.gitignore',
+        ];
     }
 }

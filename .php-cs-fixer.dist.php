@@ -1,17 +1,12 @@
-<?php echo "<?php\n"; ?>
+<?php
 
 $finder = (new PhpCsFixer\Finder())
-    ->in(__DIR__ . '/<?= $srcPath ?>')
-<?php if ($testsPath): ?>
-    ->in(__DIR__ . '/<?= $testsPath ?>')
-<?php endif; ?>
+    ->in(__DIR__ . '/src')
+    ->in(__DIR__ . '/tests')
 ;
 
 return (new PhpCsFixer\Config())
     ->setRules([
-<?php if ($isSymfony): ?>
-        '@Symfony' => true,
-<?php endif; ?>
         '@PSR12' => true,
         'declare_strict_types' => ['preserve_existing_declaration' => true],
         'array_syntax' => ['syntax' => 'short'],
@@ -22,7 +17,7 @@ return (new PhpCsFixer\Config())
         'phpdoc_to_comment' => false, // Keep PHPStan type annotations
         'header_comment' => [
             'header' => <<<EOF
-This file is part of the <?= $projectName ?>.
+This file is part of the Enabel Coding Standard.
 Copyright (c) Enabel <https://github.com/Enabel>
 For the full copyright and license information, please view the LICENSE
 file that was distributed with this source code.

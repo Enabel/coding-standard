@@ -9,11 +9,4 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace Enabel\CodingStandard\Config;
-
-enum ConflictResolution: string
-{
-    case SKIP = 'skip';
-    case REPLACE = 'replace';
-    case ASK = 'ask';
-}
+require dirname(__DIR__) . '/vendor/autoload.php';
