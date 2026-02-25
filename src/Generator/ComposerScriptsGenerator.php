@@ -27,7 +27,7 @@ final class ComposerScriptsGenerator extends AbstractGenerator
             return [];
         }
 
-        $existingScripts = $composerJson['scripts'] ?? [];
+        $existingScripts = \is_array($composerJson['scripts'] ?? null) ? $composerJson['scripts'] : [];
         $composerJson['scripts'] = array_merge($existingScripts, $this->buildScripts($config));
 
         $content = json_encode($composerJson, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . "\n";

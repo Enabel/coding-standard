@@ -32,7 +32,7 @@
 
     <coverage>
         <report>
-            <html outputDirectory="public/coverage" lowUpperBound="35" highLowerBound="60"/>
+            <html outputDirectory="var/coverage" lowUpperBound="35" highLowerBound="60"/>
             <text outputFile="php://stdout" showUncoveredFiles="true" showOnlySummary="true"/>
             <clover outputFile="var/coverage/clover.xml"/>
         </report>

@@ -42,7 +42,12 @@ final readonly class ProjectDetector
             return null;
         }
 
-        $constraint = $composerJson['require']['php'] ?? null;
+        $require = $composerJson['require'] ?? [];
+        if (!\is_array($require)) {
+            return null;
+        }
+
+        $constraint = $require['php'] ?? null;
         if (!\is_string($constraint)) {
             return null;
         }
@@ -57,7 +62,9 @@ final readonly class ProjectDetector
             return false;
         }
 
-        return isset($composerJson['require']['symfony/framework-bundle']);
+        $require = $composerJson['require'] ?? [];
+
+        return \is_array($require) && isset($require['symfony/framework-bundle']);
     }
 
     public function getSymfonyVersion(): ?string
@@ -65,9 +72,11 @@ final readonly class ProjectDetector
         // Try composer.lock first for exact installed version
         $lock = $this->readComposerLock();
         if (null !== $lock) {
-            foreach ($lock['packages'] ?? [] as $package) {
+            /** @var list<array{name?: string, version?: string}> $packages */
+            $packages = \is_array($lock['packages'] ?? null) ? $lock['packages'] : [];
+            foreach ($packages as $package) {
                 if ('symfony/framework-bundle' === ($package['name'] ?? null)) {
-                    return $this->mapToSupportedSymfonyVersion(ltrim((string) $package['version'], 'v'));
+                    return $this->mapToSupportedSymfonyVersion(ltrim($package['version'] ?? '', 'v'));
                 }
             }
         }
@@ -78,7 +87,12 @@ final readonly class ProjectDetector
             return null;
         }
 
-        $constraint = $composerJson['require']['symfony/framework-bundle'] ?? null;
+        $require = $composerJson['require'] ?? [];
+        if (!\is_array($require)) {
+            return null;
+        }
+
+        $constraint = $require['symfony/framework-bundle'] ?? null;
         if (!\is_string($constraint)) {
             return null;
         }
@@ -155,6 +169,7 @@ final readonly class ProjectDetector
 
         $data = json_decode($content, true);
 
+        /** @var array<string, mixed>|null */
         return \is_array($data) ? $data : null;
     }
 }
