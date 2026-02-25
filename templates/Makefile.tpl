@@ -130,27 +130,47 @@ lint-twig: ## Lint Twig templates
 <?php endif; ?>
 ## —— Code Quality ————————————————————————————————————————————————————————
 <?php if ($includePhpCsFixer || $includePhpStan || $includeRector): ?>
-.PHONY:<?php if ($includePhpCsFixer): ?> csf csf-fix<?php endif; ?><?php if ($includePhpStan): ?> stan<?php endif; ?><?php if ($includeRector): ?> rector rector-fix<?php endif; ?><?php if ($includePhpCsFixer && $includePhpStan): ?> analyze<?php endif; ?><?php if ($includePhpCsFixer): ?> fix<?php endif; ?>
+.PHONY: tools<?php if ($includePhpCsFixer): ?> csf csf-fix<?php endif; ?><?php if ($includePhpStan): ?> stan<?php endif; ?><?php if ($includeRector): ?> rector rector-fix<?php endif; ?><?php if ($includePhpCsFixer && $includePhpStan): ?> analyze<?php endif; ?><?php if ($includePhpCsFixer): ?> fix<?php endif; ?>
+
+tools: ## Install code quality tools
+<?php if ($includePhpCsFixer): ?>
+	$(COMPOSER) install --working-dir=tools/php-cs-fixer
+<?php endif; ?>
+<?php if ($includePhpStan): ?>
+	$(COMPOSER) install --working-dir=tools/phpstan
+<?php endif; ?>
+<?php if ($includeRector): ?>
+	$(COMPOSER) install --working-dir=tools/rector
+<?php endif; ?>
 
 <?php endif; ?>
 <?php if ($includePhpCsFixer): ?>
-csf: ## Check code style (dry-run)
+tools/php-cs-fixer/vendor/bin/php-cs-fixer:
+	$(COMPOSER) install --working-dir=tools/php-cs-fixer
+
+csf: tools/php-cs-fixer/vendor/bin/php-cs-fixer ## Check code style (dry-run)
 	$(PHP) tools/php-cs-fixer/vendor/bin/php-cs-fixer fix --dry-run --diff
 
-csf-fix: ## Fix code style
+csf-fix: tools/php-cs-fixer/vendor/bin/php-cs-fixer ## Fix code style
 	$(PHP) tools/php-cs-fixer/vendor/bin/php-cs-fixer fix
 
 <?php endif; ?>
 <?php if ($includePhpStan): ?>
-stan: ## Run PHPStan
+tools/phpstan/vendor/bin/phpstan:
+	$(COMPOSER) install --working-dir=tools/phpstan
+
+stan: tools/phpstan/vendor/bin/phpstan ## Run PHPStan
 	$(PHP) tools/phpstan/vendor/bin/phpstan analyse
 
 <?php endif; ?>
 <?php if ($includeRector): ?>
-rector: ## Run Rector (dry-run)
+tools/rector/vendor/bin/rector:
+	$(COMPOSER) install --working-dir=tools/rector
+
+rector: tools/rector/vendor/bin/rector ## Run Rector (dry-run)
 	$(PHP) tools/rector/vendor/bin/rector process --dry-run
 
-rector-fix: ## Run Rector and apply changes
+rector-fix: tools/rector/vendor/bin/rector ## Run Rector and apply changes
 	$(PHP) tools/rector/vendor/bin/rector process
 
 <?php endif; ?>

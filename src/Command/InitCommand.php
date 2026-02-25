@@ -317,15 +317,19 @@ final class InitCommand extends Command
         $steps = [];
 
         if ($config->hasAnyTool()) {
-            $steps[] = 'Install tool dependencies:';
-            if ($config->includePhpCsFixer) {
-                $steps[] = '  composer install -d tools/php-cs-fixer';
-            }
-            if ($config->includePhpStan) {
-                $steps[] = '  composer install -d tools/phpstan';
-            }
-            if ($config->includeRector) {
-                $steps[] = '  composer install -d tools/rector';
+            if ($config->includeMakefile) {
+                $steps[] = 'Install code quality tools: make tools';
+            } else {
+                $steps[] = 'Install tool dependencies:';
+                if ($config->includePhpCsFixer) {
+                    $steps[] = '  composer install -d tools/php-cs-fixer';
+                }
+                if ($config->includePhpStan) {
+                    $steps[] = '  composer install -d tools/phpstan';
+                }
+                if ($config->includeRector) {
+                    $steps[] = '  composer install -d tools/rector';
+                }
             }
             $steps[] = '';
         }
