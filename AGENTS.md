@@ -1,10 +1,17 @@
-# CLAUDE.md
+# AGENTS.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Instructions for AI agents working on this project.
 
 ## Project Overview
 
 Enabel Coding Standard is a PHP CLI tool that generates configuration files for PHP/Symfony projects. It initializes code quality tools (PHP-CS-Fixer, PHPStan, Rector, PHPUnit), CI/CD pipelines (GitLab CI, GitHub Actions, Azure DevOps), and development environments (Docker Compose, Makefile).
+
+## Language
+
+- Commit messages must be in English
+- Conventional commits: `feat:`, `fix:`, `chore:`, `refactor:`, `test:`, `docs:`
+- Do not add "Co-Authored-By" trailers to commit messages
+- Do not mention Claude or AI in commit messages or PR descriptions
 
 ## Commands
 
@@ -19,6 +26,13 @@ vendor/bin/coding-standard init --no-interaction [options]  # Non-interactive
 # Run tests
 vendor/bin/phpunit
 ```
+
+## Project Analysis
+
+Before running any command, analyze the project setup (Docker, Composer, Makefile, compose.yaml) to determine how to execute PHP:
+- Symfony CLI: `symfony php ...`, `symfony console ...`
+- Docker Compose: `docker compose exec php ...`
+- Makefile: check available `make` targets first
 
 ## Architecture
 
@@ -46,6 +60,8 @@ vendor/bin/phpunit
 - `ConflictResolution` - Enum for handling existing files (Overwrite, Skip, Ask)
 - `TemplateRenderer` - Simple template engine, throws `RuntimeException` on errors
 
+**Namespace:** `Enabel\CodingStandard\` → `src/`
+
 ## Adding New Generators
 
 1. Create class in `src/Generator/` extending `AbstractGenerator`
@@ -54,6 +70,26 @@ vendor/bin/phpunit
 4. Add template in `/templates/`
 5. Register in `InitCommand::getGenerators()`
 
-## Namespace
+## Development Workflow
 
-`Enabel\CodingStandard\` → `src/`
+### Adding a Feature
+1. Write an implementation plan first
+2. Follow TDD: write the test, then write the code to make it pass
+3. Run the full test suite before committing
+
+### Code Quality
+- Use the configured tools (PHPStan, PHP-CS-Fixer, Rector) — run them, fix issues
+- Do not add `@phpstan-ignore` or baseline entries to silence errors — fix the root cause
+- Do not disable PHP-CS-Fixer rules — adapt your code to the standard
+
+### Testing
+- Use mocks and stubs appropriately
+- Test directory structure must mirror `src/` under `tests/`
+- Prefer integration tests when possible, unit tests for isolated logic
+
+## What to Avoid
+
+- Over-engineering when a simple solution exists
+- Suggesting JS frameworks when working in a PHP/Symfony context
+- Adding unnecessary abstractions for one-time operations
+- Ignoring existing project conventions

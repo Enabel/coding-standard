@@ -41,5 +41,18 @@
     "config": {
         "sort-packages": true
     },
-    "minimum-stability": "stable"
+    "minimum-stability": "stable",
+    "scripts": {
+        "csf": "tools/php-cs-fixer/vendor/bin/php-cs-fixer fix --dry-run --diff",
+        "csf-fix": "tools/php-cs-fixer/vendor/bin/php-cs-fixer fix",
+        "stan": "tools/phpstan/vendor/bin/phpstan analyse",
+        "rector": "tools/rector/vendor/bin/rector process --dry-run",
+        "rector-fix": "tools/rector/vendor/bin/rector process",
+        "test": "bin/phpunit",
+        "qa": [
+            "@csf",
+            "@stan",
+            "@test"
+        ]
+    }
 }
