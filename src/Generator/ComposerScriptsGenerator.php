@@ -13,13 +13,44 @@ namespace Enabel\CodingStandard\Generator;
 
 use Enabel\CodingStandard\Config\Configuration;
 
-/**
- * This generator creates a composer-scripts.json file that shows what scripts
- * should be added to the project's composer.json.
- */
 final class ComposerScriptsGenerator extends AbstractGenerator
 {
     public function generate(Configuration $config): array
+    {
+        $composerJsonPath = $config->outputDir . '/composer.json';
+        if (!is_file($composerJsonPath)) {
+            return [];
+        }
+
+        $composerJson = json_decode((string) file_get_contents($composerJsonPath), true);
+        if (!is_array($composerJson)) {
+            return [];
+        }
+
+        $existingScripts = $composerJson['scripts'] ?? [];
+        $composerJson['scripts'] = array_merge($existingScripts, $this->buildScripts($config));
+
+        $content = json_encode($composerJson, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . "\n";
+
+        return [
+            'composer.json' => $content,
+        ];
+    }
+
+    public function supports(Configuration $config): bool
+    {
+        return $config->hasAnyTool();
+    }
+
+    public function getTargetFiles(): array
+    {
+        return ['composer.json'];
+    }
+
+    /**
+     * @return array<string, string|list<string>>
+     */
+    private function buildScripts(Configuration $config): array
     {
         $scripts = [];
 
@@ -39,7 +70,6 @@ final class ComposerScriptsGenerator extends AbstractGenerator
 
         $scripts['test'] = 'bin/phpunit';
 
-        // Build QA script
         $qaScripts = [];
         if ($config->includePhpCsFixer) {
             $qaScripts[] = '@csf';
@@ -58,22 +88,6 @@ final class ComposerScriptsGenerator extends AbstractGenerator
             $scripts['lint'] = ['@lint-yaml', '@lint-container', '@lint-twig', '@lint-composer'];
         }
 
-        $content = "# Add these scripts to your composer.json \"scripts\" section:\n\n";
-        $content .= json_encode(['scripts' => $scripts], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
-        $content .= "\n";
-
-        return [
-            'composer-scripts.json' => $content,
-        ];
-    }
-
-    public function supports(Configuration $config): bool
-    {
-        return $config->hasAnyTool();
-    }
-
-    public function getTargetFiles(): array
-    {
-        return ['composer-scripts.json'];
+        return $scripts;
     }
 }
