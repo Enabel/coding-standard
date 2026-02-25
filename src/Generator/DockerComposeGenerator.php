@@ -30,6 +30,7 @@ final class DockerComposeGenerator extends AbstractGenerator
             'databaseUrlDocker' => $config->getDatabaseUrl('database'),
             'phpDatabaseExtension' => $config->getPhpDatabaseExtension(),
             'isSymfony' => $config->isSymfonyProject,
+            'includeDbAdmin' => $config->includeDbAdmin,
         ];
 
         $files = [

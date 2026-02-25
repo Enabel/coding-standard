@@ -70,7 +70,7 @@ final class DockerComposeGeneratorTest extends TestCase
 
         self::assertStringNotContainsString('frankenphp', $files['compose.yaml']);
         self::assertStringContainsString('database:', $files['compose.yaml']);
-        self::assertStringContainsString('mailer:', $files['compose.yaml']);
+        self::assertStringNotContainsString('mailer:', $files['compose.yaml']);
         self::assertStringContainsString('redis:', $files['compose.yaml']);
     }
 
@@ -170,14 +170,47 @@ final class DockerComposeGeneratorTest extends TestCase
         self::assertStringContainsString('5432:5432', $files['compose.override.yaml']);
     }
 
-    public function testOverrideExposesMailpitPorts(): void
+    public function testOverrideContainsMailerService(): void
     {
         $config = $this->createConfiguration(devEnvironment: 'symfony-cli', databaseType: 'mariadb', databaseVersion: '11.4');
 
         $files = $this->generator->generate($config);
 
-        self::assertStringContainsString('8025:8025', $files['compose.override.yaml']);
-        self::assertStringContainsString('1025:1025', $files['compose.override.yaml']);
+        $override = $files['compose.override.yaml'];
+        self::assertStringContainsString('mailer:', $override);
+        self::assertStringContainsString('axllent/mailpit', $override);
+        self::assertStringContainsString('8025:8025', $override);
+        self::assertStringContainsString('MP_SMTP_AUTH_ACCEPT_ANY', $override);
+        self::assertStringContainsString('MP_SMTP_AUTH_ALLOW_INSECURE', $override);
+    }
+
+    public function testPhpMyAdminIncludedForMariadb(): void
+    {
+        $config = $this->createConfiguration(devEnvironment: 'symfony-cli', databaseType: 'mariadb', databaseVersion: '11.4', includeDbAdmin: true);
+
+        $files = $this->generator->generate($config);
+
+        $override = $files['compose.override.yaml'];
+        self::assertStringContainsString('phpmyadmin:', $override);
+        self::assertStringContainsString('PMA_HOST: database', $override);
+    }
+
+    public function testPhpMyAdminNotIncludedForPostgresql(): void
+    {
+        $config = $this->createConfiguration(devEnvironment: 'symfony-cli', databaseType: 'postgresql', databaseVersion: '17', includeDbAdmin: true);
+
+        $files = $this->generator->generate($config);
+
+        self::assertStringNotContainsString('phpmyadmin', $files['compose.override.yaml']);
+    }
+
+    public function testPhpMyAdminNotIncludedWhenDisabled(): void
+    {
+        $config = $this->createConfiguration(devEnvironment: 'symfony-cli', databaseType: 'mariadb', databaseVersion: '11.4', includeDbAdmin: false);
+
+        $files = $this->generator->generate($config);
+
+        self::assertStringNotContainsString('phpmyadmin', $files['compose.override.yaml']);
     }
 
     public function testDatabaseHealthcheckForMysql(): void
@@ -263,6 +296,7 @@ final class DockerComposeGeneratorTest extends TestCase
         ?string $databaseType = null,
         ?string $databaseVersion = null,
         bool $isSymfonyProject = true,
+        bool $includeDbAdmin = false,
     ): Configuration {
         return new Configuration(
             projectName: 'test-project',
@@ -283,6 +317,7 @@ final class DockerComposeGeneratorTest extends TestCase
             conflictResolution: ConflictResolution::ASK,
             databaseType: $databaseType,
             databaseVersion: $databaseVersion,
+            includeDbAdmin: $includeDbAdmin,
         );
     }
 }

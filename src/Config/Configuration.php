@@ -44,6 +44,7 @@ final readonly class Configuration
         public ConflictResolution $conflictResolution,
         public ?string $databaseType = null,
         public ?string $databaseVersion = null,
+        public bool $includeDbAdmin = false,
     ) {
     }
 

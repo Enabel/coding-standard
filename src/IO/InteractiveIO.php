@@ -52,6 +52,7 @@ final class InteractiveIO
         $symfonyVersion = null;
         $databaseType = null;
         $databaseVersion = null;
+        $includeDbAdmin = false;
         if ($isSymfony) {
             $detectedSymfonyVersion = $detector->getSymfonyVersion() ?? '8.0';
 
@@ -82,6 +83,10 @@ final class InteractiveIO
                     array_combine($versions, $versions),
                     $versions[0],
                 );
+
+                if (in_array($databaseType, ['mariadb', 'mysql'], true)) {
+                    $includeDbAdmin = $this->io->confirm('Include phpMyAdmin?', false);
+                }
             }
         }
 
@@ -148,6 +153,7 @@ final class InteractiveIO
             conflictResolution: ConflictResolution::ASK,
             databaseType: $databaseType,
             databaseVersion: $databaseVersion,
+            includeDbAdmin: $includeDbAdmin,
         );
     }
 

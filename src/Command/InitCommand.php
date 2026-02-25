@@ -67,6 +67,7 @@ final class InitCommand extends Command
             // Database
             ->addOption('database', null, InputOption::VALUE_REQUIRED, 'Database type (mariadb, mysql, postgresql)', null)
             ->addOption('database-version', null, InputOption::VALUE_REQUIRED, 'Database version', null)
+            ->addOption('db-admin', null, InputOption::VALUE_NEGATABLE, 'Include phpMyAdmin (MySQL/MariaDB only)', false)
 
             // Paths
             ->addOption('src-path', null, InputOption::VALUE_REQUIRED, 'Source directory path', 'src')
@@ -129,6 +130,7 @@ final class InitCommand extends Command
             conflictResolution: $conflictResolution,
             databaseType: $config->databaseType,
             databaseVersion: $config->databaseVersion,
+            includeDbAdmin: $config->includeDbAdmin,
         );
 
         // Create generators
@@ -262,6 +264,8 @@ final class InitCommand extends Command
             $devEnv = 'symfony-cli';
         }
 
+        $includeDbAdmin = (bool) $input->getOption('db-admin');
+
         return new Configuration(
             projectName: $projectName,
             phpVersion: $phpVersion,
@@ -281,6 +285,7 @@ final class InitCommand extends Command
             conflictResolution: ConflictResolution::ASK,
             databaseType: $databaseType,
             databaseVersion: $databaseVersion,
+            includeDbAdmin: $includeDbAdmin,
         );
     }
 

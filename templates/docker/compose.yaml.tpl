@@ -41,9 +41,6 @@ services:
       start_period: 30s
 
 <?php endif; ?>
-  mailer:
-    image: axllent/mailpit
-
   redis:
     image: redis:alpine
     healthcheck:
