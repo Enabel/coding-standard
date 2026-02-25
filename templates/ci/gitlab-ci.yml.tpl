@@ -200,7 +200,7 @@ phpunit:
 <?php endif; ?>
 <?php if ($hasDatabase): ?>
     - bin/console doctrine:database:create --if-not-exists --env=test
-    - bin/console doctrine:migrations:migrate --no-interaction --env=test
+    - bin/console doctrine:migrations:migrate --no-interaction --allow-no-migration --env=test
 <?php endif; ?>
     - bin/phpunit --testdox
   cache:

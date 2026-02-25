@@ -167,7 +167,7 @@ jobs:
 
 
       - name: Run migrations
-        run: bin/console doctrine:migrations:migrate --no-interaction --env=test
+        run: bin/console doctrine:migrations:migrate --no-interaction --allow-no-migration --env=test
         env:
           DATABASE_URL: <?= $databaseUrl ?>
 

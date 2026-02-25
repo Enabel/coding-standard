@@ -37,7 +37,7 @@ help: ## Display this help
 install: ## Install project dependencies
 	$(COMPOSER) install
 <?php if ($isSymfony): ?>
-	$(SYMFONY) doctrine:migrations:migrate --no-interaction
+	$(SYMFONY) doctrine:migrations:migrate --no-interaction --allow-no-migration
 <?php endif; ?>
 
 run: ## Start Symfony server
@@ -51,7 +51,7 @@ abort: ## Stop Symfony server
 install: ## Install project dependencies
 	$(COMPOSER) install
 <?php if ($isSymfony): ?>
-	$(SYMFONY) doctrine:migrations:migrate --no-interaction
+	$(SYMFONY) doctrine:migrations:migrate --no-interaction --allow-no-migration
 <?php endif; ?>
 
 run: ## Start Docker containers
@@ -67,7 +67,7 @@ restart: abort run ## Restart Docker containers
 install: ## Install project dependencies
 	$(COMPOSER) install
 <?php if ($isSymfony): ?>
-	$(SYMFONY) doctrine:migrations:migrate --no-interaction
+	$(SYMFONY) doctrine:migrations:migrate --no-interaction --allow-no-migration
 <?php endif; ?>
 <?php endif; ?>
 
@@ -100,7 +100,7 @@ db-drop: ## Drop database (with confirmation)
 	$(SYMFONY) doctrine:database:drop --force --if-exists
 
 db-migrate: ## Run migrations
-	$(SYMFONY) doctrine:migrations:migrate --no-interaction
+	$(SYMFONY) doctrine:migrations:migrate --no-interaction --allow-no-migration
 
 db-diff: ## Generate migration from entity changes
 	$(SYMFONY) make:migration

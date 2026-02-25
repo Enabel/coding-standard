@@ -192,7 +192,7 @@ stages:
             env:
               DATABASE_URL: <?= $databaseUrl ?>
 
-          - script: bin/console doctrine:migrations:migrate --no-interaction --env=test
+          - script: bin/console doctrine:migrations:migrate --no-interaction --allow-no-migration --env=test
             displayName: 'Run migrations'
             env:
               DATABASE_URL: <?= $databaseUrl ?>
