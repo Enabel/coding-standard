@@ -8,7 +8,7 @@
         "php-cs-fixer",
         "phpstan",
         "rector",
-        "ddev",
+        "docker",
         "gitlab-ci",
         "github-actions"
     ],

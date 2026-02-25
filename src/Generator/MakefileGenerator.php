@@ -23,6 +23,7 @@ final class MakefileGenerator extends AbstractGenerator
                 'includePhpCsFixer' => $config->includePhpCsFixer,
                 'includePhpStan' => $config->includePhpStan,
                 'includeRector' => $config->includeRector,
+                'devEnvironment' => $config->devEnvironment,
             ]),
         ];
     }

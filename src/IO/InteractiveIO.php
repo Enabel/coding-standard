@@ -13,6 +13,7 @@ namespace Enabel\CodingStandard\IO;
 
 use Enabel\CodingStandard\Config\Configuration;
 use Enabel\CodingStandard\Config\ConflictResolution;
+use Enabel\CodingStandard\Detector\ProjectDetector;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
 final class InteractiveIO
@@ -22,36 +23,43 @@ final class InteractiveIO
     ) {
     }
 
-    public function gatherConfiguration(string $outputDir): Configuration
+    public function gatherConfiguration(string $outputDir, ProjectDetector $detector): Configuration
     {
         $this->io->title('Enabel Coding Standard Initializer');
 
         // Project settings
         $this->io->section('Project Settings');
 
+        $detectedName = $detector->getProjectName() ?? basename((string) getcwd());
+
         /** @var string $projectName */
         $projectName = $this->io->ask(
             'Project name',
-            basename((string) getcwd()),
+            $detectedName,
         );
+
+        $detectedPhp = $detector->getPhpVersion() ?? '8.4';
 
         /** @var string $phpVersion */
         $phpVersion = $this->io->choice(
             'PHP version',
             ['8.3', '8.4', '8.5'],
-            '8.4',
+            $detectedPhp,
         );
 
-        $isSymfony = $this->io->confirm('Is this a Symfony project?', true);
+        $detectedSymfony = $detector->isSymfonyProject();
+        $isSymfony = $this->io->confirm('Is this a Symfony project?', $detectedSymfony);
         $symfonyVersion = null;
         $databaseType = null;
         $databaseVersion = null;
         if ($isSymfony) {
+            $detectedSymfonyVersion = $detector->getSymfonyVersion() ?? '8.0';
+
             /** @var string $symfonyVersion */
             $symfonyVersion = $this->io->choice(
                 'Symfony version',
                 ['7.4', '8.0'],
-                '8.0',
+                $detectedSymfonyVersion,
             );
 
             $useDatabase = $this->io->confirm('Configure a database?', true);
@@ -105,7 +113,12 @@ final class InteractiveIO
             'none',
         );
 
-        $includeDdev = $this->io->confirm('Include DDEV configuration?', true);
+        /** @var string $devEnvironment */
+        $devEnvironment = $this->io->choice(
+            'Development environment',
+            Configuration::DEV_ENVIRONMENTS,
+            'symfony-cli',
+        );
         $includeMakefile = $this->io->confirm('Include Makefile?', true);
 
         // Paths
@@ -123,7 +136,7 @@ final class InteractiveIO
             isSymfonyProject: $isSymfony,
             symfonyVersion: $symfonyVersion,
             ciProvider: $ciProvider,
-            includeDdev: $includeDdev,
+            devEnvironment: $devEnvironment,
             includeMakefile: $includeMakefile,
             includePhpCsFixer: $includePhpCsFixer,
             includePhpStan: $includePhpStan,

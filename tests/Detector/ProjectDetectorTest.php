@@ -1,0 +1,173 @@
+<?php
+
+declare(strict_types=1);
+
+/*
+ * This file is part of the Enabel Coding Standard.
+ * Copyright (c) Enabel <https://github.com/Enabel>
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
+namespace Enabel\CodingStandard\Tests\Detector;
+
+use Enabel\CodingStandard\Detector\ProjectDetector;
+use PHPUnit\Framework\TestCase;
+
+final class ProjectDetectorTest extends TestCase
+{
+    private string $tempDir;
+
+    protected function setUp(): void
+    {
+        $this->tempDir = sys_get_temp_dir() . '/project-detector-test-' . uniqid();
+        mkdir($this->tempDir);
+    }
+
+    protected function tearDown(): void
+    {
+        foreach (['composer.json', 'composer.lock'] as $file) {
+            $path = $this->tempDir . '/' . $file;
+            if (file_exists($path)) {
+                unlink($path);
+            }
+        }
+        rmdir($this->tempDir);
+    }
+
+    public function testGetProjectNameFromComposerJson(): void
+    {
+        $this->writeComposerJson(['name' => 'enabel/my-project']);
+
+        $detector = new ProjectDetector($this->tempDir);
+
+        self::assertSame('my-project', $detector->getProjectName());
+    }
+
+    public function testGetProjectNameReturnsNullWithoutComposerJson(): void
+    {
+        $detector = new ProjectDetector($this->tempDir);
+
+        self::assertNull($detector->getProjectName());
+    }
+
+    public function testGetPhpVersionFromConstraint(): void
+    {
+        $this->writeComposerJson(['require' => ['php' => '>=8.3']]);
+
+        $detector = new ProjectDetector($this->tempDir);
+
+        self::assertSame('8.3', $detector->getPhpVersion());
+    }
+
+    public function testGetPhpVersionFromCaretConstraint(): void
+    {
+        $this->writeComposerJson(['require' => ['php' => '^8.4']]);
+
+        $detector = new ProjectDetector($this->tempDir);
+
+        self::assertSame('8.4', $detector->getPhpVersion());
+    }
+
+    public function testGetPhpVersionReturnsNullForUnsupported(): void
+    {
+        $this->writeComposerJson(['require' => ['php' => '>=7.4']]);
+
+        $detector = new ProjectDetector($this->tempDir);
+
+        self::assertNull($detector->getPhpVersion());
+    }
+
+    public function testIsSymfonyProjectReturnsTrueWhenFrameworkBundlePresent(): void
+    {
+        $this->writeComposerJson(['require' => ['symfony/framework-bundle' => '^7.4']]);
+
+        $detector = new ProjectDetector($this->tempDir);
+
+        self::assertTrue($detector->isSymfonyProject());
+    }
+
+    public function testIsSymfonyProjectReturnsFalseWhenAbsent(): void
+    {
+        $this->writeComposerJson(['require' => ['some/package' => '^1.0']]);
+
+        $detector = new ProjectDetector($this->tempDir);
+
+        self::assertFalse($detector->isSymfonyProject());
+    }
+
+    public function testIsSymfonyProjectReturnsFalseWithoutComposerJson(): void
+    {
+        $detector = new ProjectDetector($this->tempDir);
+
+        self::assertFalse($detector->isSymfonyProject());
+    }
+
+    public function testGetSymfonyVersionFromComposerLock(): void
+    {
+        $this->writeComposerJson(['require' => ['symfony/framework-bundle' => '^7.4']]);
+        $this->writeComposerLock([
+            'packages' => [
+                ['name' => 'symfony/framework-bundle', 'version' => 'v7.2.3'],
+            ],
+        ]);
+
+        $detector = new ProjectDetector($this->tempDir);
+
+        self::assertSame('7.4', $detector->getSymfonyVersion());
+    }
+
+    public function testGetSymfonyVersionFromComposerLockV8(): void
+    {
+        $this->writeComposerJson(['require' => ['symfony/framework-bundle' => '^8.0']]);
+        $this->writeComposerLock([
+            'packages' => [
+                ['name' => 'symfony/framework-bundle', 'version' => 'v8.0.1'],
+            ],
+        ]);
+
+        $detector = new ProjectDetector($this->tempDir);
+
+        self::assertSame('8.0', $detector->getSymfonyVersion());
+    }
+
+    public function testGetSymfonyVersionFallsBackToComposerJsonConstraint(): void
+    {
+        $this->writeComposerJson(['require' => ['symfony/framework-bundle' => '^8.0']]);
+
+        $detector = new ProjectDetector($this->tempDir);
+
+        self::assertSame('8.0', $detector->getSymfonyVersion());
+    }
+
+    public function testGetSymfonyVersionReturnsNullWhenNotSymfony(): void
+    {
+        $this->writeComposerJson(['require' => ['some/package' => '^1.0']]);
+
+        $detector = new ProjectDetector($this->tempDir);
+
+        self::assertNull($detector->getSymfonyVersion());
+    }
+
+    /**
+     * @param array<string, mixed> $data
+     */
+    private function writeComposerJson(array $data): void
+    {
+        file_put_contents(
+            $this->tempDir . '/composer.json',
+            json_encode($data, \JSON_PRETTY_PRINT | \JSON_UNESCAPED_SLASHES),
+        );
+    }
+
+    /**
+     * @param array<string, mixed> $data
+     */
+    private function writeComposerLock(array $data): void
+    {
+        file_put_contents(
+            $this->tempDir . '/composer.lock',
+            json_encode($data, \JSON_PRETTY_PRINT | \JSON_UNESCAPED_SLASHES),
+        );
+    }
+}

@@ -14,9 +14,11 @@ namespace Enabel\CodingStandard\Command;
 use Enabel\CodingStandard\Config\Configuration;
 use Enabel\CodingStandard\Config\ConflictResolution;
 use Enabel\CodingStandard\Detector\ExistingConfigDetector;
+use Enabel\CodingStandard\Detector\ProjectDetector;
+use Enabel\CodingStandard\Generator\AgentsMdGenerator;
 use Enabel\CodingStandard\Generator\AzureDevOpsGenerator;
 use Enabel\CodingStandard\Generator\ComposerScriptsGenerator;
-use Enabel\CodingStandard\Generator\DdevGenerator;
+use Enabel\CodingStandard\Generator\DockerComposeGenerator;
 use Enabel\CodingStandard\Generator\GeneratorInterface;
 use Enabel\CodingStandard\Generator\GitHubActionsGenerator;
 use Enabel\CodingStandard\Generator\GitLabCiGenerator;
@@ -59,7 +61,7 @@ final class InitCommand extends Command
 
             // Infrastructure
             ->addOption('ci', null, InputOption::VALUE_REQUIRED, 'CI provider (gitlab, github, azure, none)', 'none')
-            ->addOption('ddev', null, InputOption::VALUE_NEGATABLE, 'Include DDEV configuration', true)
+            ->addOption('dev-env', null, InputOption::VALUE_REQUIRED, 'Development environment (symfony-cli, docker, local)', 'symfony-cli')
             ->addOption('makefile', null, InputOption::VALUE_NEGATABLE, 'Include Makefile', true)
 
             // Database
@@ -91,11 +93,13 @@ final class InitCommand extends Command
         }
         $outputDir = realpath($outputDir) ?: $outputDir;
 
+        $projectDetector = new ProjectDetector($outputDir);
+
         // Get configuration
         if ($input->isInteractive()) {
-            $config = $interactiveIO->gatherConfiguration($outputDir);
+            $config = $interactiveIO->gatherConfiguration($outputDir, $projectDetector);
         } else {
-            $config = $this->buildConfigurationFromOptions($input, $outputDir);
+            $config = $this->buildConfigurationFromOptions($input, $outputDir, $projectDetector);
         }
 
         // Determine conflict resolution
@@ -113,7 +117,7 @@ final class InitCommand extends Command
             isSymfonyProject: $config->isSymfonyProject,
             symfonyVersion: $config->symfonyVersion,
             ciProvider: $config->ciProvider,
-            includeDdev: $config->includeDdev,
+            devEnvironment: $config->devEnvironment,
             includeMakefile: $config->includeMakefile,
             includePhpCsFixer: $config->includePhpCsFixer,
             includePhpStan: $config->includePhpStan,
@@ -205,19 +209,27 @@ final class InitCommand extends Command
         return Command::SUCCESS;
     }
 
-    private function buildConfigurationFromOptions(InputInterface $input, string $outputDir): Configuration
+    private function buildConfigurationFromOptions(InputInterface $input, string $outputDir, ProjectDetector $projectDetector): Configuration
     {
         $projectName = $input->getOption('project-name');
         if (!is_string($projectName) || '' === $projectName) {
-            $projectName = basename((string) getcwd());
+            $projectName = $projectDetector->getProjectName() ?? basename((string) getcwd());
         }
 
         $phpVersion = $input->getOption('php-version');
         if (!is_string($phpVersion)) {
             $phpVersion = '8.4';
         }
+        // Use detected PHP version when the option wasn't explicitly passed
+        if (!$input->hasParameterOption('--php-version') && null !== $projectDetector->getPhpVersion()) {
+            $phpVersion = $projectDetector->getPhpVersion();
+        }
 
         $symfony = $input->getOption('symfony');
+        // Auto-detect Symfony when --symfony wasn't explicitly passed
+        if (!$input->hasParameterOption('--symfony') && $projectDetector->isSymfonyProject()) {
+            $symfony = $projectDetector->getSymfonyVersion() ?? '8.0';
+        }
         $isSymfony = is_string($symfony) && 'no' !== $symfony;
         $symfonyVersion = $isSymfony ? $symfony : null;
 
@@ -245,6 +257,11 @@ final class InitCommand extends Command
         $databaseVersion = $input->getOption('database-version');
         $databaseVersion = is_string($databaseVersion) && '' !== $databaseVersion ? $databaseVersion : null;
 
+        $devEnv = $input->getOption('dev-env');
+        if (!is_string($devEnv) || !isset(Configuration::DEV_ENVIRONMENTS[$devEnv])) {
+            $devEnv = 'symfony-cli';
+        }
+
         return new Configuration(
             projectName: $projectName,
             phpVersion: $phpVersion,
@@ -252,7 +269,7 @@ final class InitCommand extends Command
             isSymfonyProject: $isSymfony,
             symfonyVersion: $symfonyVersion,
             ciProvider: $ciProvider,
-            includeDdev: (bool) $input->getOption('ddev'),
+            devEnvironment: $devEnv,
             includeMakefile: (bool) $input->getOption('makefile'),
             includePhpCsFixer: (bool) $input->getOption('php-cs-fixer'),
             includePhpStan: (bool) $input->getOption('phpstan'),
@@ -278,12 +295,13 @@ final class InitCommand extends Command
             new RectorGenerator($renderer),
             new PhpUnitGenerator($renderer),
             new ToolsGitIgnoreGenerator($renderer),
-            new DdevGenerator($renderer),
+            new DockerComposeGenerator($renderer),
             new MakefileGenerator($renderer),
             new GitLabCiGenerator($renderer),
             new GitHubActionsGenerator($renderer),
             new AzureDevOpsGenerator($renderer),
             new ComposerScriptsGenerator($renderer),
+            new AgentsMdGenerator($renderer),
         ];
     }
 
@@ -312,14 +330,16 @@ final class InitCommand extends Command
             $steps[] = '';
         }
 
-        if ($config->hasDatabase()) {
+        if ($config->hasDatabase() && !$config->usesDocker()) {
             $steps[] = 'Configure your database connection in .env.local:';
             $steps[] = sprintf('  DATABASE_URL="%s"', $this->getExampleDatabaseUrl($config));
             $steps[] = '';
         }
 
-        if ($config->includeDdev) {
-            $steps[] = 'Start DDEV: ddev start';
+        if ('symfony-cli' === $config->devEnvironment) {
+            $steps[] = 'Start Symfony server: symfony server:start -d';
+        } elseif ('docker' === $config->devEnvironment) {
+            $steps[] = 'Start Docker: docker compose up -d';
         }
 
         if ($config->includeMakefile) {

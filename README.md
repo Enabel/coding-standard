@@ -24,7 +24,7 @@ You'll be prompted to configure:
 - Database type and version (MariaDB, MySQL, PostgreSQL)
 - Code quality tools (PHP-CS-Fixer, PHPStan, Rector, PHPUnit)
 - CI provider (GitLab CI, GitHub Actions, Azure DevOps)
-- Development environment (DDEV, Makefile)
+- Development environment (Symfony CLI, Docker Compose, Local PHP)
 
 ### Non-Interactive Mode
 
@@ -56,7 +56,7 @@ vendor/bin/coding-standard init \
 | `--phpstan-level` | PHPStan level (6-9 or max) | max |
 | `--rector` / `--no-rector` | Include Rector | yes |
 | `--phpunit` / `--no-phpunit` | Include PHPUnit config | yes |
-| `--ddev` / `--no-ddev` | Include DDEV configuration | yes |
+| `--dev-env` | Development environment (symfony-cli, docker, local) | symfony-cli |
 | `--makefile` / `--no-makefile` | Include Makefile | yes |
 | `--src-path` | Source directory path | src |
 | `--tests-path` | Tests directory path | tests |
@@ -90,7 +90,9 @@ vendor/bin/coding-standard init \
 
 | File | Description |
 |------|-------------|
-| `.ddev/config.yaml` | DDEV configuration |
+| `compose.yaml` | Docker Compose services |
+| `compose.override.yaml` | Docker Compose local overrides |
+| `Dockerfile` | PHP container (docker env only) |
 | `Makefile` | Development commands |
 | `composer-scripts.json` | Composer scripts configuration |
 
@@ -144,13 +146,6 @@ DATABASE_URL="mysql://user:password@127.0.0.1:3306/my_database?serverVersion=8.4
 **PostgreSQL:**
 ```dotenv
 DATABASE_URL="postgresql://user:password@127.0.0.1:5432/my_database?serverVersion=17&charset=utf8"
-```
-
-When using DDEV, the database is automatically configured. Use `ddev describe` to see the connection details, or use the DDEV-provided environment variables:
-
-```dotenv
-# DDEV automatically sets these, but you can override in .env.local if needed
-DATABASE_URL="mysql://db:db@db:3306/db?serverVersion=11.4-MariaDB"
 ```
 
 > **Note:** The CI pipelines are pre-configured with test database credentials. The `DATABASE_URL` in CI uses `db` as the database name because Symfony automatically appends `_test` suffix in test environment.

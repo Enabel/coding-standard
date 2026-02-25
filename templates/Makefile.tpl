@@ -1,10 +1,25 @@
 # Executables
-DDEV       = ddev
-EXEC       = $(DDEV) exec
-PHP        = $(EXEC) php
-COMPOSER   = $(EXEC) composer
+<?php if ($devEnvironment === 'symfony-cli'): ?>
+SYMFONY_CLI = symfony
+PHP         = $(SYMFONY_CLI) php
+COMPOSER    = $(SYMFONY_CLI) composer
 <?php if ($isSymfony): ?>
-SYMFONY    = $(EXEC) bin/console
+SYMFONY     = $(SYMFONY_CLI) console
+<?php endif; ?>
+<?php elseif ($devEnvironment === 'docker'): ?>
+DOCKER      = docker compose
+EXEC        = $(DOCKER) exec php
+PHP         = $(EXEC) php
+COMPOSER    = $(EXEC) composer
+<?php if ($isSymfony): ?>
+SYMFONY     = $(EXEC) bin/console
+<?php endif; ?>
+<?php else: ?>
+PHP        = php
+COMPOSER   = composer
+<?php if ($isSymfony): ?>
+SYMFONY    = php bin/console
+<?php endif; ?>
 <?php endif; ?>
 
 # Misc
@@ -16,6 +31,21 @@ help: ## Display this help
 	@grep -E '(^[a-zA-Z_-]+:.*?##.*$$)|(^##)' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[32m%-20s\033[0m %s\n", $$1, $$2}' | sed -e 's/\[32m##/[33m/'
 
 ## —— Project —————————————————————————————————————————————————————————————
+<?php if ($devEnvironment === 'symfony-cli'): ?>
+.PHONY: install run abort
+
+install: ## Install project dependencies
+	$(COMPOSER) install
+<?php if ($isSymfony): ?>
+	$(SYMFONY) doctrine:migrations:migrate --no-interaction
+<?php endif; ?>
+
+run: ## Start Symfony server
+	$(SYMFONY_CLI) server:start -d
+
+abort: ## Stop Symfony server
+	$(SYMFONY_CLI) server:stop
+<?php elseif ($devEnvironment === 'docker'): ?>
 .PHONY: install run abort restart
 
 install: ## Install project dependencies
@@ -24,13 +54,22 @@ install: ## Install project dependencies
 	$(SYMFONY) doctrine:migrations:migrate --no-interaction
 <?php endif; ?>
 
-run: ## Start DDEV
-	$(DDEV) start
+run: ## Start Docker containers
+	$(DOCKER) up -d
 
-abort: ## Stop DDEV
-	$(DDEV) stop
+abort: ## Stop Docker containers
+	$(DOCKER) down
 
-restart: abort run ## Restart DDEV
+restart: abort run ## Restart Docker containers
+<?php else: ?>
+.PHONY: install
+
+install: ## Install project dependencies
+	$(COMPOSER) install
+<?php if ($isSymfony): ?>
+	$(SYMFONY) doctrine:migrations:migrate --no-interaction
+<?php endif; ?>
+<?php endif; ?>
 
 ## —— Composer ————————————————————————————————————————————————————————————
 .PHONY: composer-install composer-update composer-validate
@@ -90,8 +129,10 @@ lint-twig: ## Lint Twig templates
 
 <?php endif; ?>
 ## —— Code Quality ————————————————————————————————————————————————————————
-.PHONY: csf csf-fix stan rector rector-fix analyze fix
+<?php if ($includePhpCsFixer || $includePhpStan || $includeRector): ?>
+.PHONY:<?php if ($includePhpCsFixer): ?> csf csf-fix<?php endif; ?><?php if ($includePhpStan): ?> stan<?php endif; ?><?php if ($includeRector): ?> rector rector-fix<?php endif; ?><?php if ($includePhpCsFixer && $includePhpStan): ?> analyze<?php endif; ?><?php if ($includePhpCsFixer): ?> fix<?php endif; ?>
 
+<?php endif; ?>
 <?php if ($includePhpCsFixer): ?>
 csf: ## Check code style (dry-run)
 	$(PHP) tools/php-cs-fixer/vendor/bin/php-cs-fixer fix --dry-run --diff
@@ -125,19 +166,48 @@ fix: csf-fix ## Fix code style issues
 .PHONY: test test-coverage
 
 test: ## Run PHPUnit tests
+<?php if ($devEnvironment === 'symfony-cli'): ?>
+	$(SYMFONY_CLI) php bin/phpunit
+<?php elseif ($devEnvironment === 'docker'): ?>
 	$(EXEC) bin/phpunit
+<?php else: ?>
+	$(PHP) bin/phpunit
+<?php endif; ?>
 
 test-coverage: ## Run tests with coverage report
+<?php if ($devEnvironment === 'symfony-cli'): ?>
+	$(SYMFONY_CLI) php bin/phpunit --coverage-html var/coverage --coverage-text
+<?php elseif ($devEnvironment === 'docker'): ?>
 	$(EXEC) bin/phpunit --coverage-html var/coverage --coverage-text
+<?php else: ?>
+	$(PHP) bin/phpunit --coverage-html var/coverage --coverage-text
+<?php endif; ?>
 
 ## —— CI ——————————————————————————————————————————————————————————————————
+<?php
+$ciDeps = [];
+if ($isSymfony) {
+    $ciDeps[] = 'lint';
+}
+if ($includePhpCsFixer) {
+    $ciDeps[] = 'csf';
+}
+if ($includePhpStan) {
+    $ciDeps[] = 'stan';
+}
+$ciDeps[] = 'test';
+
+$qaDeps = [];
+if ($includePhpCsFixer) {
+    $qaDeps[] = 'csf';
+}
+if ($includePhpStan) {
+    $qaDeps[] = 'stan';
+}
+$qaDeps[] = 'test';
+?>
 .PHONY: ci qa
 
-<?php if ($isSymfony): ?>
-ci: lint analyze test ## Run full CI pipeline (lint + analyze + test)
+ci: <?= implode(' ', $ciDeps) ?> ## Run full CI pipeline
 
-<?php else: ?>
-ci: analyze test ## Run full CI pipeline (analyze + test)
-
-<?php endif; ?>
-qa: csf stan test ## Run QA checks
+qa: <?= implode(' ', $qaDeps) ?> ## Run QA checks

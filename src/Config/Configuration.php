@@ -19,6 +19,12 @@ final readonly class Configuration
         'postgresql' => ['17', '16', '15'],
     ];
 
+    public const array DEV_ENVIRONMENTS = [
+        'symfony-cli' => 'Symfony CLI',
+        'docker' => 'Docker Compose',
+        'local' => 'Local PHP',
+    ];
+
     public function __construct(
         public string $projectName,
         public string $phpVersion,
@@ -26,7 +32,7 @@ final readonly class Configuration
         public bool $isSymfonyProject,
         public ?string $symfonyVersion,
         public string $ciProvider,
-        public bool $includeDdev,
+        public string $devEnvironment,
         public bool $includeMakefile,
         public bool $includePhpCsFixer,
         public bool $includePhpStan,
@@ -85,13 +91,12 @@ final readonly class Configuration
         };
     }
 
-    public function getDatabaseUrl(): string
+    public function getDatabaseUrl(string $host = '127.0.0.1'): string
     {
         if (!$this->hasDatabase()) {
             return '';
         }
 
-        $host = '127.0.0.1';
         $port = $this->getDatabasePort();
 
         return match ($this->databaseType) {
@@ -129,5 +134,10 @@ final readonly class Configuration
             'postgresql' => 'pgsql',
             default => 'mysql',
         };
+    }
+
+    public function usesDocker(): bool
+    {
+        return in_array($this->devEnvironment, ['symfony-cli', 'docker'], true);
     }
 }

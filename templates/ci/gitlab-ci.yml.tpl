@@ -3,10 +3,16 @@ stages:
   - lint
   - analyze
   - test
+  - security
+
+include:
+  - template: Security/SAST.gitlab-ci.yml
+  - template: Security/Secret-Detection.gitlab-ci.yml
 
 variables:
   COMPOSER_ALLOW_SUPERUSER: 1
   COMPOSER_NO_INTERACTION: 1
+  SECRET_DETECTION_ENABLED: 'true'
 
 .php-image: &php-image
   image: php:<?= $phpVersion ?>-cli
@@ -202,3 +208,13 @@ phpunit:
     paths:
       - vendor/
     policy: pull
+
+# ====================
+# Security Stage
+# ====================
+
+sast:
+  stage: security
+
+secret_detection:
+  stage: security

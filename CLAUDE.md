@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Enabel Coding Standard is a PHP CLI tool that generates configuration files for PHP/Symfony projects. It initializes code quality tools (PHP-CS-Fixer, PHPStan, Rector, PHPUnit), CI/CD pipelines (GitLab CI, GitHub Actions, Azure DevOps), and development environments (DDEV, Makefile).
+Enabel Coding Standard is a PHP CLI tool that generates configuration files for PHP/Symfony projects. It initializes code quality tools (PHP-CS-Fixer, PHPStan, Rector, PHPUnit), CI/CD pipelines (GitLab CI, GitHub Actions, Azure DevOps), and development environments (Docker Compose, Makefile).
 
 ## Commands
 
@@ -39,7 +39,7 @@ vendor/bin/phpunit
 **Generators (src/Generator/):**
 - `PhpCsFixerGenerator`, `PhpStanGenerator`, `RectorGenerator`, `PhpUnitGenerator` - Code quality tools
 - `GitLabCiGenerator`, `GitHubActionsGenerator`, `AzureDevOpsGenerator` - CI pipelines
-- `DdevGenerator`, `MakefileGenerator`, `ComposerScriptsGenerator` - Dev environment
+- `DockerComposeGenerator`, `MakefileGenerator`, `ComposerScriptsGenerator` - Dev environment
 
 **Key Classes:**
 - `Configuration` - Contains database type/version constants and helper methods (`getDbServerVersion()`, `getDbPdoExtension()`)

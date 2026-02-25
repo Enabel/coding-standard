@@ -120,7 +120,7 @@ final class PhpCsFixerGeneratorTest extends TestCase
             isSymfonyProject: $isSymfonyProject,
             symfonyVersion: null,
             ciProvider: 'none',
-            includeDdev: false,
+            devEnvironment: 'local',
             includeMakefile: false,
             includePhpCsFixer: $includePhpCsFixer,
             includePhpStan: false,
