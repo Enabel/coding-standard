@@ -174,7 +174,7 @@ stages:
           - script: |
               sudo add-apt-repository ppa:ondrej/php -y
               sudo apt-get update
-              sudo apt-get install -y php$(PHP_VERSION)-cli php$(PHP_VERSION)-intl php$(PHP_VERSION)-zip<?php if ($hasDatabase): ?> php$(PHP_VERSION)-<?= $phpDatabaseExtension ?><?php endif; ?> php$(PHP_VERSION)-xml php$(PHP_VERSION)-mbstring
+              sudo apt-get install -y php$(PHP_VERSION)-cli php$(PHP_VERSION)-intl php$(PHP_VERSION)-zip<?php if ($hasDatabase): ?> php$(PHP_VERSION)-<?= $phpDatabaseExtension ?><?php endif; ?> php$(PHP_VERSION)-xml php$(PHP_VERSION)-mbstring php$(PHP_VERSION)-pcov
               sudo update-alternatives --set php /usr/bin/php$(PHP_VERSION)
             displayName: 'Setup PHP $(PHP_VERSION)'
 

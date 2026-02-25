@@ -42,7 +42,7 @@
     <logging>
         <junit outputFile="var/coverage/junit.xml"/>
     </logging>
-    <?php if ($isSymfony): ?>
+    <?php if ($includeFoundry): ?>
     <extensions>
         <bootstrap class="Zenstruck\Foundry\PHPUnit\FoundryExtension" />
         <bootstrap class="DAMA\DoctrineTestBundle\PHPUnit\PHPUnitExtension" />

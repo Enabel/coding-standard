@@ -45,6 +45,7 @@ final readonly class Configuration
         public ?string $databaseType = null,
         public ?string $databaseVersion = null,
         public bool $includeDbAdmin = false,
+        public bool $includeFoundry = false,
     ) {
     }
 

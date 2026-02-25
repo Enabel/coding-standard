@@ -53,6 +53,7 @@ final class InteractiveIO
         $databaseType = null;
         $databaseVersion = null;
         $includeDbAdmin = false;
+        $includeFoundry = false;
         if ($isSymfony) {
             $detectedSymfonyVersion = $detector->getSymfonyVersion() ?? '8.0';
 
@@ -85,8 +86,10 @@ final class InteractiveIO
                 );
 
                 if (in_array($databaseType, ['mariadb', 'mysql'], true)) {
-                    $includeDbAdmin = $this->io->confirm('Include phpMyAdmin?', false);
+                    $includeDbAdmin = $this->io->confirm('Include phpMyAdmin?', true);
                 }
+
+                $includeFoundry = $this->io->confirm('Include Foundry & DAMA DoctrineTestBundle?', true);
             }
         }
 
@@ -154,6 +157,7 @@ final class InteractiveIO
             databaseType: $databaseType,
             databaseVersion: $databaseVersion,
             includeDbAdmin: $includeDbAdmin,
+            includeFoundry: $includeFoundry,
         );
     }
 

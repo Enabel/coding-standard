@@ -67,7 +67,8 @@ final class InitCommand extends Command
             // Database
             ->addOption('database', null, InputOption::VALUE_REQUIRED, 'Database type (mariadb, mysql, postgresql)', null)
             ->addOption('database-version', null, InputOption::VALUE_REQUIRED, 'Database version', null)
-            ->addOption('db-admin', null, InputOption::VALUE_NEGATABLE, 'Include phpMyAdmin (MySQL/MariaDB only)', false)
+            ->addOption('db-admin', null, InputOption::VALUE_NEGATABLE, 'Include phpMyAdmin (MySQL/MariaDB only)', true)
+            ->addOption('foundry', null, InputOption::VALUE_NEGATABLE, 'Include Foundry & DAMA DoctrineTestBundle', true)
 
             // Paths
             ->addOption('src-path', null, InputOption::VALUE_REQUIRED, 'Source directory path', 'src')
@@ -131,6 +132,7 @@ final class InitCommand extends Command
             databaseType: $config->databaseType,
             databaseVersion: $config->databaseVersion,
             includeDbAdmin: $config->includeDbAdmin,
+            includeFoundry: $config->includeFoundry,
         );
 
         // Create generators
@@ -265,6 +267,7 @@ final class InitCommand extends Command
         }
 
         $includeDbAdmin = (bool) $input->getOption('db-admin');
+        $includeFoundry = (bool) $input->getOption('foundry');
 
         return new Configuration(
             projectName: $projectName,
@@ -286,6 +289,7 @@ final class InitCommand extends Command
             databaseType: $databaseType,
             databaseVersion: $databaseVersion,
             includeDbAdmin: $includeDbAdmin,
+            includeFoundry: $includeFoundry,
         );
     }
 

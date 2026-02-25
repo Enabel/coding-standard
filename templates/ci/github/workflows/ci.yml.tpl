@@ -18,7 +18,7 @@ jobs:
           php-version: '<?= $phpVersion ?>'
           extensions: intl, zip<?php if ($hasDatabase): ?>, pdo, pdo_<?= $phpDatabaseExtension ?><?php endif; ?>
 
-          coverage: none
+          coverage: pcov
 
       - name: Get Composer cache directory
         id: composer-cache
@@ -150,6 +150,7 @@ jobs:
           php-version: '<?= $phpVersion ?>'
           extensions: intl, zip<?php if ($hasDatabase): ?>, pdo, pdo_<?= $phpDatabaseExtension ?><?php endif; ?>
 
+          coverage: pcov
 
       - name: Install dependencies
         run: composer install --prefer-dist --no-progress

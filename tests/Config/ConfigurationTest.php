@@ -210,6 +210,7 @@ final class ConfigurationTest extends TestCase
         ConflictResolution $conflictResolution = ConflictResolution::ASK,
         ?string $databaseType = null,
         ?string $databaseVersion = null,
+        bool $includeFoundry = false,
     ): Configuration {
         return new Configuration(
             projectName: $projectName,
@@ -230,6 +231,7 @@ final class ConfigurationTest extends TestCase
             conflictResolution: $conflictResolution,
             databaseType: $databaseType,
             databaseVersion: $databaseVersion,
+            includeFoundry: $includeFoundry,
         );
     }
 }

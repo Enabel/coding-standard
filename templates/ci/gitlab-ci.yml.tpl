@@ -45,6 +45,7 @@ build:
 
     - docker-php-ext-install intl zip<?php if ($hasDatabase): ?> pdo <?= $databaseType === 'postgresql' ? 'pdo_pgsql' : 'pdo_mysql' ?><?php endif; ?>
 
+    - pecl install pcov && docker-php-ext-enable pcov
     - curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
   script:
     - composer validate --no-check-publish
@@ -177,6 +178,7 @@ phpunit:
 
     - docker-php-ext-install intl zip<?php if ($hasDatabase): ?> pdo <?= $databaseType === 'postgresql' ? 'pdo_pgsql' : 'pdo_mysql' ?><?php endif; ?>
 
+    - pecl install pcov && docker-php-ext-enable pcov
 <?php if ($hasDatabase): ?>
     # Wait for database to be ready
     - |

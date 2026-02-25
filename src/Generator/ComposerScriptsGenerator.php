@@ -30,6 +30,14 @@ final class ComposerScriptsGenerator extends AbstractGenerator
         $existingScripts = \is_array($composerJson['scripts'] ?? null) ? $composerJson['scripts'] : [];
         $composerJson['scripts'] = array_merge($existingScripts, $this->buildScripts($config));
 
+        if ($config->includeFoundry) {
+            $existingRequireDev = \is_array($composerJson['require-dev'] ?? null) ? $composerJson['require-dev'] : [];
+            $composerJson['require-dev'] = array_merge($existingRequireDev, [
+                'dama/doctrine-test-bundle' => '^8.0',
+                'zenstruck/foundry' => '^2.0',
+            ]);
+        }
+
         $content = json_encode($composerJson, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . "\n";
 
         return [
@@ -39,7 +47,7 @@ final class ComposerScriptsGenerator extends AbstractGenerator
 
     public function supports(Configuration $config): bool
     {
-        return $config->hasAnyTool();
+        return $config->hasAnyTool() || $config->includeFoundry;
     }
 
     public function getTargetFiles(): array

@@ -22,6 +22,7 @@ final class PhpUnitGenerator extends AbstractGenerator
                 'srcPath' => $config->srcPath,
                 'testsPath' => $config->testsPath,
                 'isSymfony' => $config->isSymfonyProject,
+                'includeFoundry' => $config->includeFoundry,
             ]),
         ];
     }
