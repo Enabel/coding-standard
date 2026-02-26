@@ -89,10 +89,10 @@ final class CiAddCommandTest extends TestCase
         self::assertFileExists($this->tempDir . '/.github/workflows/ci.yml');
         self::assertFileExists($this->tempDir . '/.github/ci/Dockerfile');
 
-        $ci = file_get_contents($this->tempDir . '/.github/workflows/ci.yml');
+        $ci = (string) file_get_contents($this->tempDir . '/.github/workflows/ci.yml');
         self::assertStringContainsString('name:', $ci);
 
-        $dockerfile = file_get_contents($this->tempDir . '/.github/ci/Dockerfile');
+        $dockerfile = (string) file_get_contents($this->tempDir . '/.github/ci/Dockerfile');
         self::assertStringContainsString('php:8.4', $dockerfile);
     }
 
@@ -106,10 +106,10 @@ final class CiAddCommandTest extends TestCase
         self::assertFileExists($this->tempDir . '/.gitlab-ci.yml');
         self::assertFileExists($this->tempDir . '/.gitlab/ci/Dockerfile');
 
-        $ci = file_get_contents($this->tempDir . '/.gitlab-ci.yml');
+        $ci = (string) file_get_contents($this->tempDir . '/.gitlab-ci.yml');
         self::assertStringContainsString('stages:', $ci);
 
-        $dockerfile = file_get_contents($this->tempDir . '/.gitlab/ci/Dockerfile');
+        $dockerfile = (string) file_get_contents($this->tempDir . '/.gitlab/ci/Dockerfile');
         self::assertStringContainsString('php:8.4', $dockerfile);
     }
 

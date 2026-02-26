@@ -52,6 +52,7 @@ final class CiAddCommand extends Command
 
         if (!\is_string($provider) || '' === $provider) {
             if ($input->isInteractive()) {
+                /** @var string $provider */
                 $provider = $io->choice('Which CI provider?', self::VALID_PROVIDERS);
             } else {
                 $io->error('The --provider option is required in non-interactive mode.');
@@ -61,7 +62,7 @@ final class CiAddCommand extends Command
         }
 
         if (!\in_array($provider, self::VALID_PROVIDERS, true)) {
-            $io->error(sprintf('Invalid provider "%s". Valid providers: %s', $provider, implode(', ', self::VALID_PROVIDERS)));
+            $io->error(sprintf('Invalid provider "%s". Valid providers: %s', (string) $provider, implode(', ', self::VALID_PROVIDERS)));
 
             return Command::FAILURE;
         }

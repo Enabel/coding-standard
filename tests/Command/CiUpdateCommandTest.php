@@ -93,8 +93,7 @@ final class CiUpdateCommandTest extends TestCase
 
         self::assertSame(Command::SUCCESS, $tester->getStatusCode());
 
-        $dockerfile = file_get_contents($this->tempDir . '/.gitlab/ci/Dockerfile');
-        self::assertIsString($dockerfile);
+        $dockerfile = (string) file_get_contents($this->tempDir . '/.gitlab/ci/Dockerfile');
         self::assertStringContainsString('php:8.5-cli', $dockerfile);
     }
 
@@ -109,12 +108,10 @@ final class CiUpdateCommandTest extends TestCase
 
         self::assertSame(Command::SUCCESS, $tester->getStatusCode());
 
-        $dockerfile = file_get_contents($this->tempDir . '/.gitlab/ci/Dockerfile');
-        self::assertIsString($dockerfile);
+        $dockerfile = (string) file_get_contents($this->tempDir . '/.gitlab/ci/Dockerfile');
         self::assertStringContainsString('pdo_mysql', $dockerfile);
 
-        $ciYml = file_get_contents($this->tempDir . '/.gitlab-ci.yml');
-        self::assertIsString($ciYml);
+        $ciYml = (string) file_get_contents($this->tempDir . '/.gitlab-ci.yml');
         self::assertStringContainsString('mariadb', $ciYml);
     }
 
