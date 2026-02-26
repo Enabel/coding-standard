@@ -17,21 +17,24 @@ final class GitHubActionsGenerator extends AbstractGenerator
 {
     public function generate(Configuration $config): array
     {
+        $variables = [
+            'phpVersion' => $config->phpVersion,
+            'isSymfony' => $config->isSymfonyProject,
+            'includePhpCsFixer' => $config->includePhpCsFixer,
+            'includePhpStan' => $config->includePhpStan,
+            'includeRector' => $config->includeRector,
+            'hasDatabase' => $config->hasDatabase(),
+            'databaseType' => $config->databaseType,
+            'databaseImage' => $config->getDatabaseImage(),
+            'databasePort' => $config->getDatabasePort(),
+            'databaseUrl' => $config->getDatabaseUrl(),
+            'databaseEnvVars' => $config->getDatabaseEnvVars(),
+            'phpDatabaseExtension' => $config->getPhpDatabaseExtension(),
+        ];
+
         return [
-            '.github/workflows/ci.yml' => $this->render('ci/github/workflows/ci.yml.tpl', [
-                'phpVersion' => $config->phpVersion,
-                'isSymfony' => $config->isSymfonyProject,
-                'includePhpCsFixer' => $config->includePhpCsFixer,
-                'includePhpStan' => $config->includePhpStan,
-                'includeRector' => $config->includeRector,
-                'hasDatabase' => $config->hasDatabase(),
-                'databaseType' => $config->databaseType,
-                'databaseImage' => $config->getDatabaseImage(),
-                'databasePort' => $config->getDatabasePort(),
-                'databaseUrl' => $config->getDatabaseUrl(),
-                'databaseEnvVars' => $config->getDatabaseEnvVars(),
-                'phpDatabaseExtension' => $config->getPhpDatabaseExtension(),
-            ]),
+            '.github/workflows/ci.yml' => $this->render('ci/github/workflows/ci.yml.tpl', $variables),
+            '.github/ci/Dockerfile' => $this->render('ci/Dockerfile.tpl', $variables),
         ];
     }
 
@@ -42,6 +45,6 @@ final class GitHubActionsGenerator extends AbstractGenerator
 
     public function getTargetFiles(): array
     {
-        return ['.github/workflows/ci.yml'];
+        return ['.github/workflows/ci.yml', '.github/ci/Dockerfile'];
     }
 }

@@ -13,26 +13,23 @@ namespace Enabel\CodingStandard\Tests\Detector;
 
 use Enabel\CodingStandard\Detector\ProjectDetector;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\Filesystem\Filesystem;
 
 final class ProjectDetectorTest extends TestCase
 {
     private string $tempDir;
+    private Filesystem $filesystem;
 
     protected function setUp(): void
     {
+        $this->filesystem = new Filesystem();
         $this->tempDir = sys_get_temp_dir() . '/project-detector-test-' . uniqid();
         mkdir($this->tempDir);
     }
 
     protected function tearDown(): void
     {
-        foreach (['composer.json', 'composer.lock'] as $file) {
-            $path = $this->tempDir . '/' . $file;
-            if (file_exists($path)) {
-                unlink($path);
-            }
-        }
-        rmdir($this->tempDir);
+        $this->filesystem->remove($this->tempDir);
     }
 
     public function testGetProjectNameFromComposerJson(): void
@@ -147,6 +144,165 @@ final class ProjectDetectorTest extends TestCase
         $detector = new ProjectDetector($this->tempDir);
 
         self::assertNull($detector->getSymfonyVersion());
+    }
+
+    // --- CI Provider detection ---
+
+    public function testDetectCiProvidersReturnsEmptyWhenNoCiFiles(): void
+    {
+        $detector = new ProjectDetector($this->tempDir);
+
+        self::assertSame([], $detector->detectCiProviders());
+    }
+
+    public function testDetectCiProvidersDetectsGitlab(): void
+    {
+        file_put_contents($this->tempDir . '/.gitlab-ci.yml', 'stages: [test]');
+
+        $detector = new ProjectDetector($this->tempDir);
+
+        self::assertSame(['gitlab'], $detector->detectCiProviders());
+    }
+
+    public function testDetectCiProvidersDetectsGithub(): void
+    {
+        $this->filesystem->mkdir($this->tempDir . '/.github/workflows');
+        file_put_contents($this->tempDir . '/.github/workflows/ci.yml', 'name: CI');
+
+        $detector = new ProjectDetector($this->tempDir);
+
+        self::assertSame(['github'], $detector->detectCiProviders());
+    }
+
+    public function testDetectCiProvidersDetectsAzure(): void
+    {
+        file_put_contents($this->tempDir . '/azure-pipelines.yml', 'trigger: [main]');
+
+        $detector = new ProjectDetector($this->tempDir);
+
+        self::assertSame(['azure'], $detector->detectCiProviders());
+    }
+
+    public function testDetectCiProvidersDetectsMultiple(): void
+    {
+        file_put_contents($this->tempDir . '/.gitlab-ci.yml', 'stages: [test]');
+        $this->filesystem->mkdir($this->tempDir . '/.github/workflows');
+        file_put_contents($this->tempDir . '/.github/workflows/ci.yml', 'name: CI');
+
+        $detector = new ProjectDetector($this->tempDir);
+
+        self::assertSame(['gitlab', 'github'], $detector->detectCiProviders());
+    }
+
+    // --- Database detection ---
+
+    public function testDetectDatabaseReturnsNullWithoutComposeYaml(): void
+    {
+        $detector = new ProjectDetector($this->tempDir);
+
+        self::assertNull($detector->detectDatabase());
+    }
+
+    public function testDetectDatabaseDetectsMariadb(): void
+    {
+        file_put_contents($this->tempDir . '/compose.yaml', "services:\n  database:\n    image: mariadb:11.4\n");
+
+        $detector = new ProjectDetector($this->tempDir);
+
+        self::assertSame(['type' => 'mariadb', 'version' => '11.4'], $detector->detectDatabase());
+    }
+
+    public function testDetectDatabaseDetectsMysql(): void
+    {
+        file_put_contents($this->tempDir . '/compose.yaml', "services:\n  database:\n    image: mysql:8.4\n");
+
+        $detector = new ProjectDetector($this->tempDir);
+
+        self::assertSame(['type' => 'mysql', 'version' => '8.4'], $detector->detectDatabase());
+    }
+
+    public function testDetectDatabaseDetectsPostgresql(): void
+    {
+        file_put_contents($this->tempDir . '/compose.yaml', "services:\n  database:\n    image: postgres:17\n");
+
+        $detector = new ProjectDetector($this->tempDir);
+
+        self::assertSame(['type' => 'postgresql', 'version' => '17'], $detector->detectDatabase());
+    }
+
+    public function testDetectDatabaseReturnsNullWhenNoDbImage(): void
+    {
+        file_put_contents($this->tempDir . '/compose.yaml', "services:\n  app:\n    image: php:8.4\n");
+
+        $detector = new ProjectDetector($this->tempDir);
+
+        self::assertNull($detector->detectDatabase());
+    }
+
+    // --- Tool detection ---
+
+    public function testHasPhpCsFixerReturnsTrueWhenFileExists(): void
+    {
+        file_put_contents($this->tempDir . '/.php-cs-fixer.dist.php', '<?php return [];');
+
+        $detector = new ProjectDetector($this->tempDir);
+
+        self::assertTrue($detector->hasPhpCsFixer());
+    }
+
+    public function testHasPhpCsFixerReturnsFalseWhenFileAbsent(): void
+    {
+        $detector = new ProjectDetector($this->tempDir);
+
+        self::assertFalse($detector->hasPhpCsFixer());
+    }
+
+    public function testHasPhpStanReturnsTrueWhenFileExists(): void
+    {
+        file_put_contents($this->tempDir . '/phpstan.neon', 'parameters:');
+
+        $detector = new ProjectDetector($this->tempDir);
+
+        self::assertTrue($detector->hasPhpStan());
+    }
+
+    public function testHasPhpStanReturnsFalseWhenFileAbsent(): void
+    {
+        $detector = new ProjectDetector($this->tempDir);
+
+        self::assertFalse($detector->hasPhpStan());
+    }
+
+    public function testHasRectorReturnsTrueWhenFileExists(): void
+    {
+        file_put_contents($this->tempDir . '/rector.php', '<?php return [];');
+
+        $detector = new ProjectDetector($this->tempDir);
+
+        self::assertTrue($detector->hasRector());
+    }
+
+    public function testHasRectorReturnsFalseWhenFileAbsent(): void
+    {
+        $detector = new ProjectDetector($this->tempDir);
+
+        self::assertFalse($detector->hasRector());
+    }
+
+    public function testHasPhpUnitReturnsTrueWhenFileExists(): void
+    {
+        file_put_contents($this->tempDir . '/phpunit.dist.xml', '<phpunit/>');
+
+        $detector = new ProjectDetector($this->tempDir);
+
+        self::assertTrue($detector->hasPhpUnit());
+    }
+
+    public function testHasPhpUnitReturnsFalseWhenFileAbsent(): void
+    {
+        $detector = new ProjectDetector($this->tempDir);
+
+        self::assertFalse($detector->hasPhpUnit());
     }
 
     /**

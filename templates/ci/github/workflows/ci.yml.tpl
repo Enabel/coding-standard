@@ -6,19 +6,50 @@ on:
   pull_request:
     branches: [main, master]
 
+permissions:
+  contents: read
+  packages: write
+
+env:
+  CI_IMAGE: ghcr.io/${{ github.repository }}/ci:php<?= $phpVersion ?>
+
+
 jobs:
-  build:
+  build-image:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
         with:
-          php-version: '<?= $phpVersion ?>'
-          extensions: intl, zip<?php if ($hasDatabase): ?>, pdo, pdo_<?= $phpDatabaseExtension ?><?php endif; ?>
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-          coverage: pcov
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push CI image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: .github/ci/Dockerfile
+          push: true
+          tags: ${{ env.CI_IMAGE }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  build:
+    needs: [build-image]
+    runs-on: ubuntu-latest
+    container:
+      image: ${{ env.CI_IMAGE }}
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
 
       - name: Get Composer cache directory
         id: composer-cache
@@ -61,16 +92,15 @@ jobs:
 
 <?php if ($isSymfony): ?>
   lint:
-    needs: build
+    needs: [build-image, build]
     runs-on: ubuntu-latest
+    container:
+      image: ${{ env.CI_IMAGE }}
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@v4
-
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: '<?= $phpVersion ?>'
-          extensions: intl, zip
 
       - name: Install dependencies
         run: composer install --prefer-dist --no-progress
@@ -89,16 +119,15 @@ jobs:
 
 <?php endif; ?>
   analyze:
-    needs: build
+    needs: [build-image, build]
     runs-on: ubuntu-latest
+    container:
+      image: ${{ env.CI_IMAGE }}
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@v4
-
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: '<?= $phpVersion ?>'
-          extensions: intl, zip
 
       - name: Install dependencies
         run: composer install --prefer-dist --no-progress
@@ -120,7 +149,7 @@ jobs:
 
 <?php endif; ?>
   test:
-    needs: build
+    needs: [build-image, build]
     runs-on: ubuntu-latest
 <?php if ($hasDatabase): ?>
     services:
@@ -132,25 +161,19 @@ jobs:
           <?= $key ?>: <?= $value ?>
 
 <?php endforeach; ?>
-        ports:
-          - <?= $databasePort ?>:<?= $databasePort ?>
-
 <?php if ($databaseType === 'postgresql'): ?>
         options: --health-cmd pg_isready --health-interval=10s --health-timeout=5s --health-retries=3
 <?php else: ?>
         options: --health-cmd="healthcheck.sh --connect --innodb_initialized" --health-interval=10s --health-timeout=5s --health-retries=3
 <?php endif; ?>
 <?php endif; ?>
+    container:
+      image: ${{ env.CI_IMAGE }}
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@v4
-
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: '<?= $phpVersion ?>'
-          extensions: intl, zip<?php if ($hasDatabase): ?>, pdo, pdo_<?= $phpDatabaseExtension ?><?php endif; ?>
-
-          coverage: pcov
 
       - name: Install dependencies
         run: composer install --prefer-dist --no-progress
@@ -164,19 +187,17 @@ jobs:
       - name: Create database
         run: bin/console doctrine:database:create --if-not-exists --env=test
         env:
-          DATABASE_URL: <?= $databaseUrl ?>
-
+          DATABASE_URL: "<?= str_replace('127.0.0.1', 'database', $databaseUrl) ?>"
 
       - name: Run migrations
         run: bin/console doctrine:migrations:migrate --no-interaction --allow-no-migration --env=test
         env:
-          DATABASE_URL: <?= $databaseUrl ?>
-
+          DATABASE_URL: "<?= str_replace('127.0.0.1', 'database', $databaseUrl) ?>"
 
 <?php endif; ?>
       - name: Run tests
         run: bin/phpunit --testdox
 <?php if ($hasDatabase): ?>
         env:
-          DATABASE_URL: <?= $databaseUrl ?>
+          DATABASE_URL: "<?= str_replace('127.0.0.1', 'database', $databaseUrl) ?>"
 <?php endif; ?>

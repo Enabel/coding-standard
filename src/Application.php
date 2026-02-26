@@ -11,6 +11,8 @@ declare(strict_types=1);
 
 namespace Enabel\CodingStandard;
 
+use Enabel\CodingStandard\Command\CiAddCommand;
+use Enabel\CodingStandard\Command\CiUpdateCommand;
 use Enabel\CodingStandard\Command\InitCommand;
 use Symfony\Component\Console\Application as BaseApplication;
 
@@ -24,6 +26,8 @@ final class Application extends BaseApplication
         parent::__construct(self::NAME, self::VERSION);
 
         $this->addCommand(new InitCommand());
+        $this->addCommand(new CiUpdateCommand());
+        $this->addCommand(new CiAddCommand());
         $this->setDefaultCommand('init');
     }
 }

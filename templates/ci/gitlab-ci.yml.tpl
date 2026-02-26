@@ -1,4 +1,5 @@
 stages:
+  - .pre
   - build
   - lint
   - analyze
@@ -13,9 +14,11 @@ variables:
   COMPOSER_ALLOW_SUPERUSER: 1
   COMPOSER_NO_INTERACTION: 1
   SECRET_DETECTION_ENABLED: 'true'
+  CI_IMAGE: $CI_REGISTRY_IMAGE/ci:php<?= $phpVersion ?>
 
-.php-image: &php-image
-  image: php:<?= $phpVersion ?>-cli
+
+.ci-image: &ci-image
+  image: $CI_IMAGE
 
 .composer-cache: &composer-cache
   cache:
@@ -34,19 +37,39 @@ variables:
     policy: pull
 
 # ====================
+# Pre Stage — Build CI Image
+# ====================
+
+build:image:
+  stage: .pre
+  image:
+    name: gcr.io/kaniko-project/executor:v1.23.2-debug
+    entrypoint: [""]
+  script:
+    - mkdir -p /kaniko/.docker
+    - echo "{\"auths\":{\"$CI_REGISTRY\":{\"auth\":\"$(printf '%s:%s' "$CI_REGISTRY_USER" "$CI_REGISTRY_PASSWORD" | base64)\"}}}" > /kaniko/.docker/config.json
+    - >-
+      /kaniko/executor
+      --context $CI_PROJECT_DIR
+      --dockerfile $CI_PROJECT_DIR/.gitlab/ci/Dockerfile
+      --destination $CI_IMAGE
+      --cache=true
+      --cache-repo $CI_REGISTRY_IMAGE/ci/cache
+  rules:
+    - changes:
+        - .gitlab/ci/Dockerfile
+    - if: $BUILD_CI_IMAGE == "true"
+    - when: manual
+      allow_failure: true
+
+# ====================
 # Build Stage
 # ====================
 
 build:
-  <<: *php-image
+  <<: *ci-image
   stage: build
-  before_script:
-    - apt-get update && apt-get install -y git unzip libicu-dev libzip-dev<?php if ($hasDatabase && $databaseType === 'postgresql'): ?> libpq-dev<?php endif; ?>
-
-    - docker-php-ext-install intl zip<?php if ($hasDatabase): ?> pdo <?= $databaseType === 'postgresql' ? 'pdo_pgsql' : 'pdo_mysql' ?><?php endif; ?>
-
-    - pecl install pcov && docker-php-ext-enable pcov
-    - curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+  needs: [build:image]
   script:
     - composer validate --no-check-publish
     - composer install --prefer-dist --no-progress
@@ -80,46 +103,34 @@ build:
 # ====================
 
 lint:yaml:
-  <<: *php-image
+  <<: *ci-image
   <<: *composer-cache
   stage: lint
-  needs: [build]
-  before_script:
-    - apt-get update && apt-get install -y libicu-dev libzip-dev
-    - docker-php-ext-install intl zip
+  needs: [build:image, build]
   script:
     - bin/console lint:yaml config --parse-tags
 
 lint:twig:
-  <<: *php-image
+  <<: *ci-image
   <<: *composer-cache
   stage: lint
-  needs: [build]
-  before_script:
-    - apt-get update && apt-get install -y libicu-dev libzip-dev
-    - docker-php-ext-install intl zip
+  needs: [build:image, build]
   script:
     - bin/console lint:twig templates
 
 lint:container:
-  <<: *php-image
+  <<: *ci-image
   <<: *composer-cache
   stage: lint
-  needs: [build]
-  before_script:
-    - apt-get update && apt-get install -y libicu-dev libzip-dev
-    - docker-php-ext-install intl zip
+  needs: [build:image, build]
   script:
     - bin/console lint:container
 
 lint:composer:
-  <<: *php-image
+  <<: *ci-image
   <<: *composer-cache
   stage: lint
-  needs: [build]
-  before_script:
-    - apt-get update && apt-get install -y git unzip
-    - curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+  needs: [build:image, build]
   script:
     - composer validate --no-check-publish
 
@@ -130,23 +141,20 @@ lint:composer:
 
 <?php if ($includePhpCsFixer): ?>
 php-cs-fixer:
-  <<: *php-image
+  <<: *ci-image
   <<: *composer-cache
   stage: analyze
-  needs: [build]
+  needs: [build:image, build]
   script:
     - tools/php-cs-fixer/vendor/bin/php-cs-fixer fix --dry-run --diff
 
 <?php endif; ?>
 <?php if ($includePhpStan): ?>
 phpstan:
-  <<: *php-image
+  <<: *ci-image
   <<: *composer-cache
   stage: analyze
-  needs: [build]
-  before_script:
-    - apt-get update && apt-get install -y libicu-dev libzip-dev
-    - docker-php-ext-install intl zip
+  needs: [build:image, build]
   script:
     - tools/phpstan/vendor/bin/phpstan analyse
 
@@ -156,9 +164,9 @@ phpstan:
 # ====================
 
 phpunit:
-  <<: *php-image
+  <<: *ci-image
   stage: test
-  needs: [build]
+  needs: [build:image, build]
 <?php if ($hasDatabase): ?>
   services:
     - name: <?= $databaseImage ?>
@@ -172,14 +180,7 @@ phpunit:
   variables:
     APP_ENV: test
     DATABASE_URL: "<?= str_replace('127.0.0.1', 'database', $databaseUrl) ?>"
-<?php endif; ?>
   before_script:
-    - apt-get update && apt-get install -y git unzip libicu-dev libzip-dev<?php if ($hasDatabase && $databaseType === 'postgresql'): ?> libpq-dev<?php endif; ?>
-
-    - docker-php-ext-install intl zip<?php if ($hasDatabase): ?> pdo <?= $databaseType === 'postgresql' ? 'pdo_pgsql' : 'pdo_mysql' ?><?php endif; ?>
-
-    - pecl install pcov && docker-php-ext-enable pcov
-<?php if ($hasDatabase): ?>
     # Wait for database to be ready
     - |
       for i in $(seq 1 30); do
