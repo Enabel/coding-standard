@@ -42,19 +42,15 @@ variables:
 
 build:image:
   stage: .pre
-  image:
-    name: gcr.io/kaniko-project/executor:v1.23.2-debug
-    entrypoint: [""]
+  image: docker:27
+  services:
+    - docker:27-dind
+  variables:
+    DOCKER_TLS_CERTDIR: "/certs"
   script:
-    - mkdir -p /kaniko/.docker
-    - echo "{\"auths\":{\"$CI_REGISTRY\":{\"auth\":\"$(printf '%s:%s' "$CI_REGISTRY_USER" "$CI_REGISTRY_PASSWORD" | base64)\"}}}" > /kaniko/.docker/config.json
-    - >-
-      /kaniko/executor
-      --context $CI_PROJECT_DIR
-      --dockerfile $CI_PROJECT_DIR/.gitlab/ci/Dockerfile
-      --destination $CI_IMAGE
-      --cache=true
-      --cache-repo $CI_REGISTRY_IMAGE/ci/cache
+    - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN $CI_REGISTRY
+    - docker build -t $CI_IMAGE -f .gitlab/ci/Dockerfile .
+    - docker push $CI_IMAGE
   rules:
     - changes:
         - .gitlab/ci/Dockerfile

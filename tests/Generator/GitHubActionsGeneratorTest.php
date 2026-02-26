@@ -107,7 +107,7 @@ final class GitHubActionsGeneratorTest extends TestCase
 
         $ci = $files['.github/workflows/ci.yml'];
         self::assertStringContainsString('container:', $ci);
-        self::assertStringContainsString('image: ${{ env.CI_IMAGE }}', $ci);
+        self::assertStringContainsString('image: ${{ needs.build-image.outputs.image }}', $ci);
     }
 
     public function testCiWithDatabaseUsesDatabaseHostname(): void
@@ -172,7 +172,7 @@ final class GitHubActionsGeneratorTest extends TestCase
 
         $files = $this->generator->generate($config);
 
-        self::assertStringContainsString('ghcr.io/${{ github.repository }}/ci:php8.4', $files['.github/workflows/ci.yml']);
+        self::assertStringContainsString('ghcr.io/${GITHUB_REPOSITORY,,}/ci:php8.4', $files['.github/workflows/ci.yml']);
     }
 
     public function testCiJobsNeedBuildImage(): void

@@ -115,7 +115,8 @@ final class GitLabCiGeneratorTest extends TestCase
 
         $ci = $files['.gitlab-ci.yml'];
         self::assertStringContainsString('build:image:', $ci);
-        self::assertStringContainsString('kaniko', $ci);
+        self::assertStringContainsString('docker:27', $ci);
+        self::assertStringContainsString('docker login -u gitlab-ci-token -p $CI_JOB_TOKEN', $ci);
         self::assertStringContainsString('$CI_IMAGE', $ci);
     }
 

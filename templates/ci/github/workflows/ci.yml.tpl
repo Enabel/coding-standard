@@ -10,14 +10,16 @@ permissions:
   contents: read
   packages: write
 
-env:
-  CI_IMAGE: ghcr.io/${{ github.repository }}/ci:php<?= $phpVersion ?>
-
-
 jobs:
   build-image:
     runs-on: ubuntu-latest
+    outputs:
+      image: ${{ steps.meta.outputs.image }}
     steps:
+      - name: Set image name
+        id: meta
+        run: echo "image=ghcr.io/${GITHUB_REPOSITORY,,}/ci:php<?= $phpVersion ?>" >> $GITHUB_OUTPUT
+
       - uses: actions/checkout@v4
 
       - name: Log in to GHCR
@@ -36,7 +38,7 @@ jobs:
           context: .
           file: .github/ci/Dockerfile
           push: true
-          tags: ${{ env.CI_IMAGE }}
+          tags: ${{ steps.meta.outputs.image }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -44,7 +46,7 @@ jobs:
     needs: [build-image]
     runs-on: ubuntu-latest
     container:
-      image: ${{ env.CI_IMAGE }}
+      image: ${{ needs.build-image.outputs.image }}
       credentials:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
@@ -95,7 +97,7 @@ jobs:
     needs: [build-image, build]
     runs-on: ubuntu-latest
     container:
-      image: ${{ env.CI_IMAGE }}
+      image: ${{ needs.build-image.outputs.image }}
       credentials:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
@@ -122,7 +124,7 @@ jobs:
     needs: [build-image, build]
     runs-on: ubuntu-latest
     container:
-      image: ${{ env.CI_IMAGE }}
+      image: ${{ needs.build-image.outputs.image }}
       credentials:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
@@ -164,11 +166,11 @@ jobs:
 <?php if ($databaseType === 'postgresql'): ?>
         options: --health-cmd pg_isready --health-interval=10s --health-timeout=5s --health-retries=3
 <?php else: ?>
-        options: --health-cmd="healthcheck.sh --connect --innodb_initialized" --health-interval=10s --health-timeout=5s --health-retries=3
+        options: --health-cmd="mysqladmin ping -h 127.0.0.1 -u root -p<?= $databaseEnvVars['MYSQL_ROOT_PASSWORD'] ?> --silent" --health-interval=5s --health-timeout=5s --health-retries=10
 <?php endif; ?>
 <?php endif; ?>
     container:
-      image: ${{ env.CI_IMAGE }}
+      image: ${{ needs.build-image.outputs.image }}
       credentials:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
