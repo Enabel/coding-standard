@@ -17,21 +17,24 @@ final class GitLabCiGenerator extends AbstractGenerator
 {
     public function generate(Configuration $config): array
     {
+        $variables = [
+            'phpVersion' => $config->phpVersion,
+            'isSymfony' => $config->isSymfonyProject,
+            'includePhpCsFixer' => $config->includePhpCsFixer,
+            'includePhpStan' => $config->includePhpStan,
+            'includeRector' => $config->includeRector,
+            'hasDatabase' => $config->hasDatabase(),
+            'databaseType' => $config->databaseType,
+            'databaseImage' => $config->getDatabaseImage(),
+            'databasePort' => $config->getDatabasePort(),
+            'databaseUrl' => $config->getDatabaseUrl(),
+            'databaseEnvVars' => $config->getDatabaseEnvVars(),
+            'phpDatabaseExtension' => $config->getPhpDatabaseExtension(),
+        ];
+
         return [
-            '.gitlab-ci.yml' => $this->render('ci/gitlab-ci.yml.tpl', [
-                'phpVersion' => $config->phpVersion,
-                'isSymfony' => $config->isSymfonyProject,
-                'includePhpCsFixer' => $config->includePhpCsFixer,
-                'includePhpStan' => $config->includePhpStan,
-                'includeRector' => $config->includeRector,
-                'hasDatabase' => $config->hasDatabase(),
-                'databaseType' => $config->databaseType,
-                'databaseImage' => $config->getDatabaseImage(),
-                'databasePort' => $config->getDatabasePort(),
-                'databaseUrl' => $config->getDatabaseUrl(),
-                'databaseEnvVars' => $config->getDatabaseEnvVars(),
-                'phpDatabaseExtension' => $config->getPhpDatabaseExtension(),
-            ]),
+            '.gitlab-ci.yml' => $this->render('ci/gitlab-ci.yml.tpl', $variables),
+            '.gitlab/ci/Dockerfile' => $this->render('ci/Dockerfile.tpl', $variables),
         ];
     }
 
@@ -42,6 +45,6 @@ final class GitLabCiGenerator extends AbstractGenerator
 
     public function getTargetFiles(): array
     {
-        return ['.gitlab-ci.yml'];
+        return ['.gitlab-ci.yml', '.gitlab/ci/Dockerfile'];
     }
 }

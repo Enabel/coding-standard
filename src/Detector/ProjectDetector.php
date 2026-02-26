@@ -13,9 +13,81 @@ namespace Enabel\CodingStandard\Detector;
 
 final readonly class ProjectDetector
 {
+    private const array CI_PROVIDER_FILES = [
+        'gitlab' => '.gitlab-ci.yml',
+        'github' => '.github/workflows/ci.yml',
+        'azure' => 'azure-pipelines.yml',
+    ];
+
     public function __construct(
         private string $projectDir,
     ) {
+    }
+
+    /**
+     * @return list<string> CI providers detected ('gitlab', 'github', 'azure')
+     */
+    public function detectCiProviders(): array
+    {
+        $providers = [];
+
+        foreach (self::CI_PROVIDER_FILES as $provider => $file) {
+            if (file_exists($this->projectDir . '/' . $file)) {
+                $providers[] = $provider;
+            }
+        }
+
+        return $providers;
+    }
+
+    /**
+     * @return array{type: string, version: string}|null
+     */
+    public function detectDatabase(): ?array
+    {
+        $composePath = $this->projectDir . '/compose.yaml';
+        if (!file_exists($composePath)) {
+            return null;
+        }
+
+        $content = file_get_contents($composePath);
+        if (false === $content) {
+            return null;
+        }
+
+        $patterns = [
+            'mariadb' => '/image:\s*mariadb:(\d+\.\d+)/',
+            'mysql' => '/image:\s*mysql:(\d+\.\d+)/',
+            'postgresql' => '/image:\s*postgres:(\d+)/',
+        ];
+
+        foreach ($patterns as $type => $pattern) {
+            if (preg_match($pattern, $content, $matches)) {
+                return ['type' => $type, 'version' => $matches[1]];
+            }
+        }
+
+        return null;
+    }
+
+    public function hasPhpCsFixer(): bool
+    {
+        return file_exists($this->projectDir . '/.php-cs-fixer.dist.php');
+    }
+
+    public function hasPhpStan(): bool
+    {
+        return file_exists($this->projectDir . '/phpstan.neon');
+    }
+
+    public function hasRector(): bool
+    {
+        return file_exists($this->projectDir . '/rector.php');
+    }
+
+    public function hasPhpUnit(): bool
+    {
+        return file_exists($this->projectDir . '/phpunit.dist.xml');
     }
 
     public function getProjectName(): ?string
