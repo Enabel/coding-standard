@@ -27,4 +27,9 @@ abstract class AbstractGenerator implements GeneratorInterface
     {
         return $this->renderer->render($template, $variables);
     }
+
+    protected function rawContent(string $template): string
+    {
+        return $this->renderer->rawContent($template);
+    }
 }

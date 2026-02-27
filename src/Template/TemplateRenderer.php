@@ -50,6 +50,17 @@ final class TemplateRenderer
         return (string) ob_get_clean();
     }
 
+    public function rawContent(string $template): string
+    {
+        $templateFile = $this->templatesPath . '/' . $template;
+
+        if (!file_exists($templateFile)) {
+            throw new RuntimeException(sprintf('Template not found: %s', $template));
+        }
+
+        return file_get_contents($templateFile);
+    }
+
     public function exists(string $template): bool
     {
         return file_exists($this->templatesPath . '/' . $template);

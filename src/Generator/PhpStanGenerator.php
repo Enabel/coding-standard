@@ -31,8 +31,8 @@ final class PhpStanGenerator extends AbstractGenerator
         ]);
 
         if ($config->isSymfonyProject) {
-            $files['tools/phpstan/console-application.php'] = $this->render('tools/phpstan/console-application.php.tpl');
-            $files['tools/phpstan/object-manager.php'] = $this->render('tools/phpstan/object-manager.php.tpl');
+            $files['tools/phpstan/console-application.php'] = $this->rawContent('tools/phpstan/console-application.php.tpl');
+            $files['tools/phpstan/object-manager.php'] = $this->rawContent('tools/phpstan/object-manager.php.tpl');
         }
 
         return $files;
