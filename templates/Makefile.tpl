@@ -1,5 +1,6 @@
 # Executables
 <?php if ($devEnvironment === 'symfony-cli'): ?>
+DOCKER      = docker compose
 SYMFONY_CLI = symfony
 PHP         = $(SYMFONY_CLI) php
 COMPOSER    = $(SYMFONY_CLI) composer
@@ -32,7 +33,7 @@ help: ## Display this help
 
 ## —— Project —————————————————————————————————————————————————————————————
 <?php if ($devEnvironment === 'symfony-cli'): ?>
-.PHONY: install run abort
+.PHONY: install run abort restart
 
 install: ## Install project dependencies
 	$(COMPOSER) install
@@ -40,11 +41,15 @@ install: ## Install project dependencies
 	$(SYMFONY) doctrine:migrations:migrate --no-interaction --allow-no-migration
 <?php endif; ?>
 
-run: ## Start Symfony server
+run: ## Start Symfony server and Docker services
+	$(DOCKER) up -d
 	$(SYMFONY_CLI) server:start -d
 
-abort: ## Stop Symfony server
+abort: ## Stop Symfony server and Docker services
 	$(SYMFONY_CLI) server:stop
+	$(DOCKER) down
+
+restart: abort run ## Restart all services
 <?php elseif ($devEnvironment === 'docker'): ?>
 .PHONY: install run abort restart
 

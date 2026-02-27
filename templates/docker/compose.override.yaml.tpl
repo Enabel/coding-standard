@@ -15,7 +15,7 @@ services:
 <?php if ($databaseType !== null): ?>
   database:
     ports:
-      - "<?= $databasePort ?>:<?= $databasePort ?>"
+      - "<?= $databasePort ?>"
 
 <?php endif; ?>
 ###> symfony/mailer ###
@@ -23,7 +23,7 @@ services:
     image: axllent/mailpit
     ports:
       - "1025"
-      - "8025:8025"
+      - "8025"
     environment:
       MP_SMTP_AUTH_ACCEPT_ANY: 1
       MP_SMTP_AUTH_ALLOW_INSECURE: 1
@@ -31,7 +31,7 @@ services:
 
   redis:
     ports:
-      - "6379:6379"
+      - "6379"
 <?php if ($includeDbAdmin && in_array($databaseType, ['mariadb', 'mysql'], true)): ?>
 
   phpmyadmin:

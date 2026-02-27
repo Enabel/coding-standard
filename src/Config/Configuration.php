@@ -102,9 +102,9 @@ final readonly class Configuration
         $port = $this->getDatabasePort();
 
         return match ($this->databaseType) {
-            'mariadb' => sprintf('mysql://db:db@%s:%d/db?serverVersion=%s-MariaDB', $host, $port, $this->databaseVersion),
-            'mysql' => sprintf('mysql://db:db@%s:%d/db?serverVersion=%s', $host, $port, $this->databaseVersion),
-            'postgresql' => sprintf('postgresql://db:db@%s:%d/db?serverVersion=%s', $host, $port, $this->databaseVersion),
+            'mariadb' => sprintf('mysql://root@%s:%d/app?serverVersion=%s-MariaDB', $host, $port, $this->databaseVersion),
+            'mysql' => sprintf('mysql://root@%s:%d/app?serverVersion=%s', $host, $port, $this->databaseVersion),
+            'postgresql' => sprintf('postgresql://root@%s:%d/app?serverVersion=%s', $host, $port, $this->databaseVersion),
             default => '',
         };
     }
@@ -116,15 +116,14 @@ final readonly class Configuration
     {
         return match ($this->databaseType) {
             'mariadb', 'mysql' => [
-                'MYSQL_ROOT_PASSWORD' => 'root',
-                'MYSQL_DATABASE' => 'db_test',
-                'MYSQL_USER' => 'db',
-                'MYSQL_PASSWORD' => 'db',
+                'MYSQL_DATABASE' => 'app',
+                'MYSQL_PASSWORD' => 'password123',
+                'MYSQL_ALLOW_EMPTY_PASSWORD' => 'yes',
             ],
             'postgresql' => [
-                'POSTGRES_DB' => 'db_test',
-                'POSTGRES_USER' => 'db',
-                'POSTGRES_PASSWORD' => 'db',
+                'POSTGRES_DB' => 'app',
+                'POSTGRES_PASSWORD' => 'password123',
+                'POSTGRES_HOST_AUTH_METHOD' => 'trust',
             ],
             default => [],
         };

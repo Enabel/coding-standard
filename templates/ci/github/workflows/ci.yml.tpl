@@ -166,7 +166,7 @@ jobs:
 <?php if ($databaseType === 'postgresql'): ?>
         options: --health-cmd pg_isready --health-interval=10s --health-timeout=5s --health-retries=3
 <?php else: ?>
-        options: --health-cmd="mysqladmin ping -h 127.0.0.1 -u root -p<?= $databaseEnvVars['MYSQL_ROOT_PASSWORD'] ?> --silent" --health-interval=5s --health-timeout=5s --health-retries=10
+        options: --health-cmd="mysqladmin ping -h 127.0.0.1 -u root --silent" --health-interval=5s --health-timeout=5s --health-retries=10
 <?php endif; ?>
 <?php endif; ?>
     container:

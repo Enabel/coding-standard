@@ -139,9 +139,9 @@ final class ConfigurationTest extends TestCase
      */
     public static function databaseUrlProvider(): iterable
     {
-        yield 'mariadb' => ['mariadb', '10.11', 'mysql://db:db@127.0.0.1:3306/db?serverVersion=10.11-MariaDB'];
-        yield 'mysql' => ['mysql', '8.0', 'mysql://db:db@127.0.0.1:3306/db?serverVersion=8.0'];
-        yield 'postgresql' => ['postgresql', '16', 'postgresql://db:db@127.0.0.1:5432/db?serverVersion=16'];
+        yield 'mariadb' => ['mariadb', '10.11', 'mysql://root@127.0.0.1:3306/app?serverVersion=10.11-MariaDB'];
+        yield 'mysql' => ['mysql', '8.0', 'mysql://root@127.0.0.1:3306/app?serverVersion=8.0'];
+        yield 'postgresql' => ['postgresql', '16', 'postgresql://root@127.0.0.1:5432/app?serverVersion=16'];
         yield 'no database' => [null, null, ''];
     }
 
@@ -150,10 +150,9 @@ final class ConfigurationTest extends TestCase
         $config = $this->createConfiguration(databaseType: 'mysql', databaseVersion: '8.0');
 
         $expected = [
-            'MYSQL_ROOT_PASSWORD' => 'root',
-            'MYSQL_DATABASE' => 'db_test',
-            'MYSQL_USER' => 'db',
-            'MYSQL_PASSWORD' => 'db',
+            'MYSQL_DATABASE' => 'app',
+            'MYSQL_PASSWORD' => 'password123',
+            'MYSQL_ALLOW_EMPTY_PASSWORD' => 'yes',
         ];
 
         self::assertSame($expected, $config->getDatabaseEnvVars());
@@ -164,9 +163,9 @@ final class ConfigurationTest extends TestCase
         $config = $this->createConfiguration(databaseType: 'postgresql', databaseVersion: '16');
 
         $expected = [
-            'POSTGRES_DB' => 'db_test',
-            'POSTGRES_USER' => 'db',
-            'POSTGRES_PASSWORD' => 'db',
+            'POSTGRES_DB' => 'app',
+            'POSTGRES_PASSWORD' => 'password123',
+            'POSTGRES_HOST_AUTH_METHOD' => 'trust',
         ];
 
         self::assertSame($expected, $config->getDatabaseEnvVars());

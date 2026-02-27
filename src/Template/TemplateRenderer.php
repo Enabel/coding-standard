@@ -58,7 +58,7 @@ final class TemplateRenderer
             throw new RuntimeException(sprintf('Template not found: %s', $template));
         }
 
-        return file_get_contents($templateFile);
+        return file_get_contents($templateFile) ?: throw new RuntimeException(sprintf('Failed to read template: %s', $template));
     }
 
     public function exists(string $template): bool

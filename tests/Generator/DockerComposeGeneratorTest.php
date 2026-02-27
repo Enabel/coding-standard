@@ -127,8 +127,8 @@ final class DockerComposeGeneratorTest extends TestCase
 
         $files = $this->generator->generate($config);
 
-        self::assertStringContainsString('MYSQL_ROOT_PASSWORD', $files['compose.yaml']);
         self::assertStringContainsString('MYSQL_DATABASE', $files['compose.yaml']);
+        self::assertStringContainsString('MYSQL_ALLOW_EMPTY_PASSWORD', $files['compose.yaml']);
     }
 
     public function testGeneratePostgresqlHasPostgresEnvVars(): void
@@ -167,7 +167,7 @@ final class DockerComposeGeneratorTest extends TestCase
 
         $files = $this->generator->generate($config);
 
-        self::assertStringContainsString('5432:5432', $files['compose.override.yaml']);
+        self::assertStringContainsString('"5432"', $files['compose.override.yaml']);
     }
 
     public function testOverrideContainsMailerService(): void
@@ -179,7 +179,7 @@ final class DockerComposeGeneratorTest extends TestCase
         $override = $files['compose.override.yaml'];
         self::assertStringContainsString('mailer:', $override);
         self::assertStringContainsString('axllent/mailpit', $override);
-        self::assertStringContainsString('8025:8025', $override);
+        self::assertStringContainsString('"8025"', $override);
         self::assertStringContainsString('MP_SMTP_AUTH_ACCEPT_ANY', $override);
         self::assertStringContainsString('MP_SMTP_AUTH_ALLOW_INSECURE', $override);
     }
@@ -241,15 +241,15 @@ final class DockerComposeGeneratorTest extends TestCase
         self::assertStringContainsString('redis-cli', $files['compose.yaml']);
     }
 
-    public function testEnvLocalForSymfonyCliUsesLocalhost(): void
+    public function testEnvLocalForSymfonyCliIsEmpty(): void
     {
         $config = $this->createConfiguration(devEnvironment: 'symfony-cli', databaseType: 'mariadb', databaseVersion: '11.4');
 
         $files = $this->generator->generate($config);
 
         self::assertArrayHasKey('.env.local', $files);
-        self::assertStringContainsString('127.0.0.1:3306', $files['.env.local']);
-        self::assertStringContainsString('smtp://127.0.0.1:1025', $files['.env.local']);
+        self::assertStringNotContainsString('DATABASE_URL', $files['.env.local']);
+        self::assertStringNotContainsString('127.0.0.1', $files['.env.local']);
     }
 
     public function testEnvLocalForDockerUsesServiceNames(): void
