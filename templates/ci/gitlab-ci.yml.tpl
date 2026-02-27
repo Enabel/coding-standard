@@ -55,8 +55,6 @@ build:image:
     - changes:
         - .gitlab/ci/Dockerfile
     - if: $BUILD_CI_IMAGE == "true"
-    - when: manual
-      allow_failure: true
 
 # ====================
 # Build Stage
@@ -65,7 +63,9 @@ build:image:
 build:
   <<: *ci-image
   stage: build
-  needs: [build:image]
+  needs:
+    - job: build:image
+      optional: true
   script:
     - composer validate --no-check-publish
     - composer install --prefer-dist --no-progress
@@ -102,7 +102,10 @@ lint:yaml:
   <<: *ci-image
   <<: *composer-cache
   stage: lint
-  needs: [build:image, build]
+  needs:
+    - job: build:image
+      optional: true
+    - build
   script:
     - bin/console lint:yaml config --parse-tags
 
@@ -110,7 +113,10 @@ lint:twig:
   <<: *ci-image
   <<: *composer-cache
   stage: lint
-  needs: [build:image, build]
+  needs:
+    - job: build:image
+      optional: true
+    - build
   script:
     - bin/console lint:twig templates
 
@@ -118,7 +124,10 @@ lint:container:
   <<: *ci-image
   <<: *composer-cache
   stage: lint
-  needs: [build:image, build]
+  needs:
+    - job: build:image
+      optional: true
+    - build
   script:
     - bin/console lint:container
 
@@ -126,7 +135,10 @@ lint:composer:
   <<: *ci-image
   <<: *composer-cache
   stage: lint
-  needs: [build:image, build]
+  needs:
+    - job: build:image
+      optional: true
+    - build
   script:
     - composer validate --no-check-publish
 
@@ -140,7 +152,10 @@ php-cs-fixer:
   <<: *ci-image
   <<: *composer-cache
   stage: analyze
-  needs: [build:image, build]
+  needs:
+    - job: build:image
+      optional: true
+    - build
   script:
     - tools/php-cs-fixer/vendor/bin/php-cs-fixer fix --dry-run --diff
 
@@ -150,8 +165,14 @@ phpstan:
   <<: *ci-image
   <<: *composer-cache
   stage: analyze
-  needs: [build:image, build]
+  needs:
+    - job: build:image
+      optional: true
+    - build
   script:
+<?php if ($isSymfony): ?>
+    - bin/console cache:warmup
+<?php endif; ?>
     - tools/phpstan/vendor/bin/phpstan analyse
 
 <?php endif; ?>
@@ -162,7 +183,10 @@ phpstan:
 phpunit:
   <<: *ci-image
   stage: test
-  needs: [build:image, build]
+  needs:
+    - job: build:image
+      optional: true
+    - build
 <?php if ($hasDatabase): ?>
   services:
     - name: <?= $databaseImage ?>
