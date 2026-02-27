@@ -16,7 +16,7 @@ parameters:
     tmpDir: /tmp/phpstan
 <?php endif; ?>
     parallel:
-    maximumNumberOfProcesses: 4
+        maximumNumberOfProcesses: 4
 
     # Inférence de types
     inferPrivatePropertyTypeFromConstructor: true
