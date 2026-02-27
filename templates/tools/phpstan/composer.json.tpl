@@ -4,6 +4,7 @@
         "phpstan/extension-installer": "^1.4",
         "phpstan/phpstan": "^2",
 <?php if ($isSymfony): ?>
+        "phpstan/phpstan-doctrine": "^2.0",
         "phpstan/phpstan-phpunit": "^2.0",
         "phpstan/phpstan-symfony": "^2.0"
 <?php else: ?>

@@ -23,11 +23,17 @@ final class PhpStanGenerator extends AbstractGenerator
             'phpstanLevel' => $config->phpstanLevel,
             'srcPath' => $config->srcPath,
             'testsPath' => $config->testsPath,
+            'isSymfony' => $config->isSymfonyProject,
         ]);
 
         $files['tools/phpstan/composer.json'] = $this->render('tools/phpstan/composer.json.tpl', [
             'isSymfony' => $config->isSymfonyProject,
         ]);
+
+        if ($config->isSymfonyProject) {
+            $files['tools/phpstan/console-application.php'] = $this->render('tools/phpstan/console-application.php.tpl');
+            $files['tools/phpstan/object-manager.php'] = $this->render('tools/phpstan/object-manager.php.tpl');
+        }
 
         return $files;
     }
@@ -42,6 +48,8 @@ final class PhpStanGenerator extends AbstractGenerator
         return [
             'phpstan.neon',
             'tools/phpstan/composer.json',
+            'tools/phpstan/console-application.php',
+            'tools/phpstan/object-manager.php',
         ];
     }
 }

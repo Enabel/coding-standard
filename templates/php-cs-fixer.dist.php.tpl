@@ -31,4 +31,5 @@ EOF
     ])
     ->setFinder($finder)
     ->setRiskyAllowed(true)
+    ->setCacheFile('tools/php-cs-fixer/.php-cs-fixer.cache')
 ;
