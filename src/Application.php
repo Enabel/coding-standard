@@ -25,9 +25,9 @@ final class Application extends BaseApplication
     {
         parent::__construct(self::NAME, self::VERSION);
 
-        $this->addCommand(new InitCommand());
-        $this->addCommand(new CiUpdateCommand());
-        $this->addCommand(new CiAddCommand());
+        $this->add(new InitCommand());
+        $this->add(new CiUpdateCommand());
+        $this->add(new CiAddCommand());
         $this->setDefaultCommand('init');
     }
 }
