@@ -82,6 +82,10 @@ jobs:
   test:
     needs: build
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        symfony-version: ['^7.0', '^8.0']
+    name: test (Symfony ${{ matrix.symfony-version }})
     steps:
       - uses: actions/checkout@v4
 
@@ -91,8 +95,15 @@ jobs:
           php-version: '8.4'
           extensions: intl, zip
 
+      - name: Require Symfony ${{ matrix.symfony-version }}
+        run: |
+          composer require \
+            symfony/console:${{ matrix.symfony-version }} \
+            symfony/filesystem:${{ matrix.symfony-version }} \
+            --no-update --no-interaction
+
       - name: Install dependencies
-        run: composer install --prefer-dist --no-progress
+        run: composer update --prefer-dist --no-progress
 
       - name: Run tests
         run: vendor/bin/phpunit --testdox

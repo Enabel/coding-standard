@@ -24,10 +24,15 @@ final class Application extends BaseApplication
     public function __construct()
     {
         parent::__construct(self::NAME, self::VERSION);
-
-        $this->addCommand(new InitCommand());
-        $this->addCommand(new CiUpdateCommand());
-        $this->addCommand(new CiAddCommand());
         $this->setDefaultCommand('init');
+    }
+
+    protected function getDefaultCommands(): array
+    {
+        return array_merge(parent::getDefaultCommands(), [
+            new InitCommand(),
+            new CiUpdateCommand(),
+            new CiAddCommand(),
+        ]);
     }
 }
