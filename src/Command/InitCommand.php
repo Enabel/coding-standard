@@ -49,7 +49,7 @@ final class InitCommand extends Command
         $this
             // Project settings
             ->addOption('project-name', null, InputOption::VALUE_REQUIRED, 'Project name')
-            ->addOption('php-version', null, InputOption::VALUE_REQUIRED, 'PHP version (8.3, 8.4, 8.5)', '8.4')
+            ->addOption('php-version', null, InputOption::VALUE_REQUIRED, 'PHP version (8.4, 8.5)', Configuration::DEFAULT_PHP_VERSION)
             ->addOption('symfony', null, InputOption::VALUE_REQUIRED, 'Symfony version (7.4, 8.0) or "no"', 'no')
 
             // Tool selection
@@ -65,9 +65,9 @@ final class InitCommand extends Command
             ->addOption('makefile', null, InputOption::VALUE_NEGATABLE, 'Include Makefile', true)
 
             // Database
-            ->addOption('database', null, InputOption::VALUE_REQUIRED, 'Database type (mariadb, mysql, postgresql)', null)
-            ->addOption('database-version', null, InputOption::VALUE_REQUIRED, 'Database version', null)
-            ->addOption('db-admin', null, InputOption::VALUE_NEGATABLE, 'Include phpMyAdmin (MySQL/MariaDB only)', true)
+            ->addOption('database', null, InputOption::VALUE_NEGATABLE, 'Configure a MariaDB database (Symfony projects only)', true)
+            ->addOption('database-version', null, InputOption::VALUE_REQUIRED, 'MariaDB version (12.3, 11.8, 11.4)', null)
+            ->addOption('db-admin', null, InputOption::VALUE_NEGATABLE, 'Include phpMyAdmin', true)
             ->addOption('foundry', null, InputOption::VALUE_NEGATABLE, 'Include Foundry & DAMA DoctrineTestBundle', true)
 
             // Paths
@@ -222,7 +222,7 @@ final class InitCommand extends Command
 
         $phpVersion = $input->getOption('php-version');
         if (!is_string($phpVersion)) {
-            $phpVersion = '8.4';
+            $phpVersion = Configuration::DEFAULT_PHP_VERSION;
         }
         // Use detected PHP version when the option wasn't explicitly passed
         if (!$input->hasParameterOption('--php-version') && null !== $projectDetector->getPhpVersion()) {
@@ -255,19 +255,26 @@ final class InitCommand extends Command
             $testsPath = 'tests';
         }
 
-        $databaseType = $input->getOption('database');
-        $databaseType = is_string($databaseType) && '' !== $databaseType ? $databaseType : null;
+        // New projects always use MariaDB; --no-database skips the database entirely
+        $withDatabase = $isSymfony && false !== $input->getOption('database');
+        $databaseType = $withDatabase ? Configuration::DEFAULT_DATABASE_TYPE : null;
 
         $databaseVersion = $input->getOption('database-version');
         $databaseVersion = is_string($databaseVersion) && '' !== $databaseVersion ? $databaseVersion : null;
+
+        if ($withDatabase) {
+            $databaseVersion ??= Configuration::getDefaultDatabaseVersion(Configuration::DEFAULT_DATABASE_TYPE);
+        } else {
+            $databaseVersion = null;
+        }
 
         $devEnv = $input->getOption('dev-env');
         if (!is_string($devEnv) || !isset(Configuration::DEV_ENVIRONMENTS[$devEnv])) {
             $devEnv = 'symfony-cli';
         }
 
-        $includeDbAdmin = (bool) $input->getOption('db-admin');
-        $includeFoundry = (bool) $input->getOption('foundry');
+        $includeDbAdmin = $withDatabase && (bool) $input->getOption('db-admin');
+        $includeFoundry = $withDatabase && (bool) $input->getOption('foundry');
 
         return new Configuration(
             projectName: $projectName,
@@ -366,11 +373,9 @@ final class InitCommand extends Command
 
     private function getExampleDatabaseUrl(Configuration $config): string
     {
-        return match ($config->databaseType) {
-            'mariadb' => sprintf('mysql://user:password@127.0.0.1:3306/my_database?serverVersion=%s-MariaDB', $config->databaseVersion),
-            'mysql' => sprintf('mysql://user:password@127.0.0.1:3306/my_database?serverVersion=%s', $config->databaseVersion),
-            'postgresql' => sprintf('postgresql://user:password@127.0.0.1:5432/my_database?serverVersion=%s&charset=utf8', $config->databaseVersion),
-            default => '',
-        };
+        return sprintf(
+            'mysql://user:password@127.0.0.1:3306/my_database?serverVersion=%s-MariaDB',
+            $config->databaseVersion,
+        );
     }
 }

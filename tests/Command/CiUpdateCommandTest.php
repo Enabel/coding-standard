@@ -115,6 +115,33 @@ final class CiUpdateCommandTest extends TestCase
         self::assertStringContainsString('mariadb', $ciYml);
     }
 
+    public function testDatabaseWithoutVersionFallsBackToLatestSupportedVersion(): void
+    {
+        file_put_contents($this->tempDir . '/.gitlab-ci.yml', 'stages: [test]');
+
+        $tester = $this->executeCommand(['--database' => 'mariadb']);
+
+        self::assertSame(Command::SUCCESS, $tester->getStatusCode());
+
+        $ciYml = (string) file_get_contents($this->tempDir . '/.gitlab-ci.yml');
+        self::assertStringContainsString('mariadb:11.8', $ciYml);
+    }
+
+    public function testDatabaseVersionWithoutTypeDefaultsToMariadb(): void
+    {
+        file_put_contents($this->tempDir . '/.gitlab-ci.yml', 'stages: [test]');
+
+        $tester = $this->executeCommand(['--database-version' => '11.4']);
+
+        self::assertSame(Command::SUCCESS, $tester->getStatusCode());
+
+        $ciYml = (string) file_get_contents($this->tempDir . '/.gitlab-ci.yml');
+        self::assertStringContainsString('mariadb:11.4', $ciYml);
+
+        $dockerfile = (string) file_get_contents($this->tempDir . '/.gitlab/ci/Dockerfile');
+        self::assertStringContainsString('pdo_mysql', $dockerfile);
+    }
+
     /**
      * @param array<string, string> $input
      */

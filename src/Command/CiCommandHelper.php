@@ -28,10 +28,10 @@ final class CiCommandHelper
     public static function addCiOptions(Command $command): void
     {
         $command
-            ->addOption('php-version', null, InputOption::VALUE_REQUIRED, 'PHP version (8.3, 8.4, 8.5)')
+            ->addOption('php-version', null, InputOption::VALUE_REQUIRED, 'PHP version (8.4, 8.5)')
             ->addOption('symfony', null, InputOption::VALUE_REQUIRED, 'Symfony version (7.4, 8.0) or "no"')
-            ->addOption('database', null, InputOption::VALUE_REQUIRED, 'Database type (mariadb, mysql, postgresql)')
-            ->addOption('database-version', null, InputOption::VALUE_REQUIRED, 'Database version')
+            ->addOption('database', null, InputOption::VALUE_REQUIRED, 'Database type (mariadb, mysql, postgresql), defaults to mariadb')
+            ->addOption('database-version', null, InputOption::VALUE_REQUIRED, 'Database version (defaults to the most recent supported version)')
             ->addOption('php-cs-fixer', null, InputOption::VALUE_NEGATABLE, 'Include PHP-CS-Fixer')
             ->addOption('phpstan', null, InputOption::VALUE_NEGATABLE, 'Include PHPStan')
             ->addOption('rector', null, InputOption::VALUE_NEGATABLE, 'Include Rector')
@@ -42,7 +42,7 @@ final class CiCommandHelper
     {
         $projectName = $detector->getProjectName() ?? basename($outputDir);
 
-        $phpVersion = $this->resolveOption($input, 'php-version') ?? $detector->getPhpVersion() ?? '8.4';
+        $phpVersion = $this->resolveOption($input, 'php-version') ?? $detector->getPhpVersion() ?? Configuration::DEFAULT_PHP_VERSION;
 
         $symfony = $this->resolveOption($input, 'symfony');
         if (null === $symfony) {
@@ -61,7 +61,13 @@ final class CiCommandHelper
             if (null !== $dbInfo) {
                 $databaseType = $dbInfo['type'];
                 $databaseVersion ??= $dbInfo['version'];
+            } elseif (null !== $databaseVersion) {
+                $databaseType = Configuration::DEFAULT_DATABASE_TYPE;
             }
+        }
+
+        if (null !== $databaseType && null === $databaseVersion) {
+            $databaseVersion = Configuration::getDefaultDatabaseVersion($databaseType);
         }
 
         $includePhpCsFixer = $this->resolveNegatableOption($input, 'php-cs-fixer') ?? $detector->hasPhpCsFixer();

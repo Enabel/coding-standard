@@ -67,16 +67,37 @@ final class ConfigurationTest extends TestCase
         self::assertFalse($config->hasAnyCi());
     }
 
+    #[DataProvider('defaultDatabaseVersionProvider')]
+    public function testGetDefaultDatabaseVersion(string $databaseType, string $expected): void
+    {
+        self::assertSame($expected, Configuration::getDefaultDatabaseVersion($databaseType));
+    }
+
+    /**
+     * @return iterable<string, array{string, string}>
+     */
+    public static function defaultDatabaseVersionProvider(): iterable
+    {
+        yield 'mariadb' => ['mariadb', '11.8'];
+        yield 'mysql' => ['mysql', '8.4'];
+        yield 'postgresql' => ['postgresql', '18'];
+    }
+
+    public function testGetDefaultDatabaseVersionReturnsNullForUnknownType(): void
+    {
+        self::assertNull(Configuration::getDefaultDatabaseVersion('sqlite'));
+    }
+
     public function testHasDatabaseReturnsTrueWhenBothTypeAndVersionSet(): void
     {
-        $config = $this->createConfiguration(databaseType: 'mysql', databaseVersion: '8.0');
+        $config = $this->createConfiguration(databaseType: 'mysql', databaseVersion: '8.4');
 
         self::assertTrue($config->hasDatabase());
     }
 
     public function testHasDatabaseReturnsFalseWhenTypeIsNull(): void
     {
-        $config = $this->createConfiguration(databaseType: null, databaseVersion: '8.0');
+        $config = $this->createConfiguration(databaseType: null, databaseVersion: '8.4');
 
         self::assertFalse($config->hasDatabase());
     }
@@ -101,9 +122,9 @@ final class ConfigurationTest extends TestCase
      */
     public static function databaseImageProvider(): iterable
     {
-        yield 'mariadb' => ['mariadb', '10.11', 'mariadb:10.11'];
-        yield 'mysql' => ['mysql', '8.0', 'mysql:8.0'];
-        yield 'postgresql' => ['postgresql', '16', 'postgres:16'];
+        yield 'mariadb' => ['mariadb', '11.8', 'mariadb:11.8'];
+        yield 'mysql' => ['mysql', '8.4', 'mysql:8.4'];
+        yield 'postgresql' => ['postgresql', '18', 'postgres:18'];
         yield 'no database' => [null, null, ''];
     }
 
@@ -139,15 +160,15 @@ final class ConfigurationTest extends TestCase
      */
     public static function databaseUrlProvider(): iterable
     {
-        yield 'mariadb' => ['mariadb', '10.11', 'mysql://root@127.0.0.1:3306/app?serverVersion=10.11-MariaDB'];
-        yield 'mysql' => ['mysql', '8.0', 'mysql://root@127.0.0.1:3306/app?serverVersion=8.0'];
-        yield 'postgresql' => ['postgresql', '16', 'postgresql://root@127.0.0.1:5432/app?serverVersion=16'];
+        yield 'mariadb' => ['mariadb', '11.8', 'mysql://root@127.0.0.1:3306/app?serverVersion=11.8-MariaDB'];
+        yield 'mysql' => ['mysql', '8.4', 'mysql://root@127.0.0.1:3306/app?serverVersion=8.4'];
+        yield 'postgresql' => ['postgresql', '18', 'postgresql://root@127.0.0.1:5432/app?serverVersion=18'];
         yield 'no database' => [null, null, ''];
     }
 
     public function testGetDatabaseEnvVarsForMysql(): void
     {
-        $config = $this->createConfiguration(databaseType: 'mysql', databaseVersion: '8.0');
+        $config = $this->createConfiguration(databaseType: 'mysql', databaseVersion: '8.4');
 
         $expected = [
             'MYSQL_DATABASE' => 'app',
@@ -160,7 +181,7 @@ final class ConfigurationTest extends TestCase
 
     public function testGetDatabaseEnvVarsForPostgresql(): void
     {
-        $config = $this->createConfiguration(databaseType: 'postgresql', databaseVersion: '16');
+        $config = $this->createConfiguration(databaseType: 'postgresql', databaseVersion: '18');
 
         $expected = [
             'POSTGRES_DB' => 'app',

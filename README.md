@@ -21,7 +21,7 @@ vendor/bin/coding-standard init
 You'll be prompted to configure:
 - Project name and PHP version
 - Symfony version (if applicable)
-- Database type and version (MariaDB, MySQL, PostgreSQL)
+- MariaDB version (MariaDB is the only database offered for new projects)
 - Code quality tools (PHP-CS-Fixer, PHPStan, Rector, PHPUnit)
 - CI provider (GitLab CI, GitHub Actions, Azure DevOps)
 - Development environment (Symfony CLI, Docker Compose, Local PHP)
@@ -35,8 +35,7 @@ vendor/bin/coding-standard init \
     --project-name=my-project \
     --php-version=8.4 \
     --symfony=8.0 \
-    --database=postgresql \
-    --database-version=17 \
+    --database-version=11.8 \
     --ci=gitlab \
     --no-interaction
 ```
@@ -46,10 +45,10 @@ vendor/bin/coding-standard init \
 | Option | Description | Default |
 |--------|-------------|---------|
 | `--project-name` | Project name | Current directory name |
-| `--php-version` | PHP version (8.3, 8.4, 8.5) | 8.4 |
+| `--php-version` | PHP version (8.4, 8.5) | 8.4 |
 | `--symfony` | Symfony version (7.4, 8.0) or "no" | no |
-| `--database` | Database type (mariadb, mysql, postgresql) | - |
-| `--database-version` | Database version | - |
+| `--database` / `--no-database` | Configure a MariaDB database (Symfony projects only) | yes |
+| `--database-version` | MariaDB version (12.3, 11.8, 11.4) | 11.8 |
 | `--ci` | CI provider (gitlab, github, azure, none) | none |
 | `--php-cs-fixer` / `--no-php-cs-fixer` | Include PHP-CS-Fixer | yes |
 | `--phpstan` / `--no-phpstan` | Include PHPStan | yes |
@@ -98,13 +97,15 @@ vendor/bin/coding-standard init \
 
 ## Database Support
 
-The following databases are supported with their recent versions:
+**New projects always use MariaDB.** Only versions still supported by
+[Upsun](https://developer.upsun.com/docs/add-services/mysql) are offered:
 
-| Database | Versions |
-|----------|----------|
-| MariaDB | 11.4, 10.11, 10.6 |
-| MySQL | 8.4, 8.0, 5.7 |
-| PostgreSQL | 17, 16, 15 |
+| Versions | Default |
+|----------|---------|
+| 12.3, 11.8, 11.4 | 11.8 (LTS — 12.3 is a short-term rolling release) |
+
+MySQL and PostgreSQL are not offered by `init`, but `ci:add` and `ci:update` still detect them in an
+existing `compose.yaml` and generate the matching pipeline (MySQL 8.4, PostgreSQL 18 to 14).
 
 When a database is configured:
 - CI pipelines include a database service container
@@ -133,19 +134,8 @@ make install
 
 If you configured a database, you need to set the `DATABASE_URL` environment variable in your `.env.local` file:
 
-**MariaDB:**
 ```dotenv
-DATABASE_URL="mysql://user:password@127.0.0.1:3306/my_database?serverVersion=11.4-MariaDB"
-```
-
-**MySQL:**
-```dotenv
-DATABASE_URL="mysql://user:password@127.0.0.1:3306/my_database?serverVersion=8.4"
-```
-
-**PostgreSQL:**
-```dotenv
-DATABASE_URL="postgresql://user:password@127.0.0.1:5432/my_database?serverVersion=17&charset=utf8"
+DATABASE_URL="mysql://user:password@127.0.0.1:3306/my_database?serverVersion=11.8-MariaDB"
 ```
 
 > **Note:** The CI pipelines are pre-configured with test database credentials. The `DATABASE_URL` in CI uses `db` as the database name because Symfony automatically appends `_test` suffix in test environment.

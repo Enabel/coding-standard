@@ -38,12 +38,15 @@ final class InteractiveIO
             $detectedName,
         );
 
-        $detectedPhp = $detector->getPhpVersion() ?? '8.4';
+        $detectedPhp = $detector->getPhpVersion();
+        if (!in_array($detectedPhp, Configuration::PHP_VERSIONS, true)) {
+            $detectedPhp = Configuration::DEFAULT_PHP_VERSION;
+        }
 
         /** @var string $phpVersion */
         $phpVersion = $this->io->choice(
             'PHP version',
-            ['8.3', '8.4', '8.5'],
+            Configuration::PHP_VERSIONS,
             $detectedPhp,
         );
 
@@ -64,31 +67,19 @@ final class InteractiveIO
                 $detectedSymfonyVersion,
             );
 
-            $useDatabase = $this->io->confirm('Configure a database?', true);
+            $useDatabase = $this->io->confirm('Configure a MariaDB database?', true);
             if ($useDatabase) {
-                /** @var string $databaseType */
-                $databaseType = $this->io->choice(
-                    'Database type',
-                    [
-                        'mariadb' => 'MariaDB',
-                        'mysql' => 'MySQL',
-                        'postgresql' => 'PostgreSQL',
-                    ],
-                    'mariadb',
-                );
+                $databaseType = Configuration::DEFAULT_DATABASE_TYPE;
 
                 $versions = Configuration::DATABASE_VERSIONS[$databaseType];
                 /** @var string $databaseVersion */
                 $databaseVersion = $this->io->choice(
-                    'Database version',
+                    'MariaDB version',
                     array_combine($versions, $versions),
-                    $versions[0],
+                    Configuration::getDefaultDatabaseVersion($databaseType) ?? $versions[0],
                 );
 
-                if (in_array($databaseType, ['mariadb', 'mysql'], true)) {
-                    $includeDbAdmin = $this->io->confirm('Include phpMyAdmin?', true);
-                }
-
+                $includeDbAdmin = $this->io->confirm('Include phpMyAdmin?', true);
                 $includeFoundry = $this->io->confirm('Include Foundry & DAMA DoctrineTestBundle?', true);
             }
         }

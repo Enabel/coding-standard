@@ -13,10 +13,47 @@ namespace Enabel\CodingStandard\Config;
 
 final readonly class Configuration
 {
+    /**
+     * PHP versions offered for new projects: only those still supported by Upsun
+     * (8.3 and below are end of life).
+     *
+     * @see https://developer.upsun.com/docs/languages/php
+     */
+    public const array PHP_VERSIONS = ['8.4', '8.5'];
+
+    public const string DEFAULT_PHP_VERSION = '8.4';
+
+    /**
+     * MariaDB is the only database offered for new projects.
+     *
+     * MySQL and PostgreSQL are still handled when detected in an existing project
+     * (see ProjectDetector::detectDatabase()), but never proposed for a new one.
+     */
+    public const string DEFAULT_DATABASE_TYPE = 'mariadb';
+
+    /**
+     * Versions currently supported by Upsun (retired versions are not offered).
+     *
+     * MySQL and PostgreSQL entries are only used for existing projects where such
+     * a database is detected.
+     *
+     * @see https://developer.upsun.com/docs/add-services/mysql
+     * @see https://developer.upsun.com/docs/add-services/postgresql
+     */
     public const array DATABASE_VERSIONS = [
-        'mariadb' => ['11.4', '10.11', '10.6'],
-        'mysql' => ['8.4', '8.0', '5.7'],
-        'postgresql' => ['17', '16', '15'],
+        'mariadb' => ['12.3', '11.8', '11.4'],
+        'mysql' => ['8.4'],
+        'postgresql' => ['18', '17', '16', '15', '14'],
+    ];
+
+    /**
+     * Recommended version per database type: the most recent LTS rather than
+     * the most recent release (MariaDB 12.3 is a short-term rolling release).
+     */
+    public const array DEFAULT_DATABASE_VERSIONS = [
+        'mariadb' => '11.8',
+        'mysql' => '8.4',
+        'postgresql' => '18',
     ];
 
     public const array DEV_ENVIRONMENTS = [
@@ -64,6 +101,14 @@ final readonly class Configuration
     public function hasAnyCi(): bool
     {
         return 'none' !== $this->ciProvider;
+    }
+
+    /**
+     * Returns the recommended version for the given database type.
+     */
+    public static function getDefaultDatabaseVersion(string $databaseType): ?string
+    {
+        return self::DEFAULT_DATABASE_VERSIONS[$databaseType] ?? null;
     }
 
     public function hasDatabase(): bool

@@ -57,6 +57,14 @@ Before running any command, analyze the project setup (Docker, Composer, Makefil
 
 **Key Classes:**
 - `Configuration` - Contains database type/version constants and helper methods (`getDbServerVersion()`, `getDbPdoExtension()`)
+  - `Configuration::DEFAULT_DATABASE_TYPE` is `mariadb`: MariaDB is the only database offered for a
+    new project. `init` never asks for a database type — do not reintroduce that choice. MySQL and
+    PostgreSQL stay supported only through detection of an existing project (`ProjectDetector`,
+    `ci:add`, `ci:update`), so keep the per-type branches in `Configuration` and the templates.
+  - `DATABASE_VERSIONS` and `PHP_VERSIONS` only list versions still supported by Upsun (see the links
+    in the class docblocks); `DEFAULT_DATABASE_VERSIONS` holds the recommended one per type (latest
+    LTS, not necessarily the latest release). Check the Upsun docs before adding or removing a
+    version. `ProjectDetector::parsePhpConstraint()` deliberately still detects PHP 8.3.
 - `ConflictResolution` - Enum for handling existing files (Overwrite, Skip, Ask)
 - `TemplateRenderer` - Simple template engine, throws `RuntimeException` on errors
 

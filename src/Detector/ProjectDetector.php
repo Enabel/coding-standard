@@ -197,6 +197,8 @@ final readonly class ProjectDetector
 
     private function parsePhpConstraint(string $constraint): ?string
     {
+        // 8.3 is no longer offered for new projects but must stay detectable
+        // so existing projects keep generating a matching CI.
         $supported = ['8.3', '8.4', '8.5'];
 
         if (preg_match('/(\d+\.\d+)/', $constraint, $matches)) {
