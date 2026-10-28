@@ -85,8 +85,7 @@ jobs:
     strategy:
       matrix:
         php: ['8.4', '8.5']
-        symfony-version: ['^7.0', '^8.0']
-    name: test (PHP ${{ matrix.php }}, Symfony ${{ matrix.symfony-version }})
+    name: test (PHP ${{ matrix.php }})
     steps:
       - uses: actions/checkout@v7
 
@@ -95,13 +94,6 @@ jobs:
         with:
           php-version: ${{ matrix.php }}
           extensions: intl, zip
-
-      - name: Require Symfony ${{ matrix.symfony-version }}
-        run: |
-          composer require \
-            symfony/console:${{ matrix.symfony-version }} \
-            symfony/filesystem:${{ matrix.symfony-version }} \
-            --no-update --no-interaction
 
       - name: Install dependencies
         run: composer update --prefer-dist --no-progress
