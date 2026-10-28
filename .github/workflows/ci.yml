@@ -84,15 +84,16 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
+        php: ['8.4', '8.5']
         symfony-version: ['^7.0', '^8.0']
-    name: test (Symfony ${{ matrix.symfony-version }})
+    name: test (PHP ${{ matrix.php }}, Symfony ${{ matrix.symfony-version }})
     steps:
       - uses: actions/checkout@v4
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.4'
+          php-version: ${{ matrix.php }}
           extensions: intl, zip
 
       - name: Require Symfony ${{ matrix.symfony-version }}
