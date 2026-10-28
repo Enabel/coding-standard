@@ -24,7 +24,7 @@ jobs:
         run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
 
       - name: Cache Composer dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ${{ steps.composer-cache.outputs.dir }}
           key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
@@ -46,7 +46,7 @@ jobs:
         run: composer install --prefer-dist --no-progress -d tools/rector
 
       - name: Cache tools
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: |
             tools/*/vendor
